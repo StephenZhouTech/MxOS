@@ -21,26 +21,14 @@
  *
  * 1 tab == 4 spaces!
  */
-#include "os_list.h"
-#include "os_types.h"
-#include "os_mem.h"
-#include "os_configs.h"
-#include "os_task_sch.h"
-#include "os_error_code.h"
+#ifndef __MXOS_ERROR_CODE_H__
+#define __MXOS_ERROR_CODE_H__
 
-#define MAX_PRIORITY_CNT                32
+typedef enum _OS_ErrorCode {
+    OS_SUCCESS = 0,
+} OS_ErrorCode_e;
 
-typedef struct _OS_TaskControlBlock {
-    ListHead_t      StateList;
-    OS_Int8_t       TaskName[CONFIG_TASK_NAME_LEN];
-    OS_Uint8_t      Priority;
-    OS_Uint32_t     *StackPointer;
-} OS_TCB_t;
+#endif // __MXOS_ERROR_CODE_H__
 
-typedef struct _OS_TaskScheduler {
-    ListHead_t      ReadyListHead[MAX_PRIORITY_CNT];
-    ListHead_t      BlockListHead;
-    ListHead_t      SuspendListHead;
-    OS_Uint32_t     PriorityActive;
-    OS_Uint32_t     CurrentTime;
-} OS_TaskScheduler_t;
+
+
