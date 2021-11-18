@@ -26,6 +26,7 @@
 
 typedef enum _OS_ErrorCode {
     OS_SUCCESS = 0,
+    OS_NULL_POINTER,
 } OS_ErrorCode_e;
 
 #endif // __MXOS_ERROR_CODE_H__

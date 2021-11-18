@@ -22,13 +22,16 @@
  * 1 tab == 4 spaces!
  */
 #include "os_list.h"
-#include "os_types.h"
 #include "os_mem.h"
+#include "arch.h"
 #include "os_configs.h"
 #include "os_task_sch.h"
 #include "os_error_code.h"
 
-#define MAX_PRIORITY_CNT                32
+typedef enum _OS_ScheduerState {
+    SCHEDULER_SUSPEND = 0,
+    SCHEDULER_RUNNING
+} OS_ScheduerState_e;
 
 typedef struct _OS_TaskControlBlock {
     ListHead_t      StateList;
@@ -38,9 +41,25 @@ typedef struct _OS_TaskControlBlock {
 } OS_TCB_t;
 
 typedef struct _OS_TaskScheduler {
-    ListHead_t      ReadyListHead[MAX_PRIORITY_CNT];
+    ListHead_t      ReadyListHead[OS_MAX_TASK_PRIORITY];
     ListHead_t      BlockListHead;
     ListHead_t      SuspendListHead;
     OS_Uint32_t     PriorityActive;
     OS_Uint32_t     CurrentTime;
+    OS_Uint8_t      ScheduerState;
 } OS_TaskScheduler_t;
+
+OS_Uint32_t OS_API_TaskCreate(  TaskFunction_t Func,
+                                const char * Name,
+                                OS_Uint32_t StackDepth,
+                                OS_Uint32_t Priority,
+                                OS_Uint32_t *Handler,
+                                void * const Parameters )
+{
+    if (Name == OS_NULL || Handler == OS_NULL)
+    {
+        return OS_NULL_POINTER;
+    }
+
+    return OS_SUCCESS;
+}

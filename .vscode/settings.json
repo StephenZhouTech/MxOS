@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "os_configs.h": "c"
+        "os_configs.h": "c",
+        "os_error_code.h": "c"
     }
 }
