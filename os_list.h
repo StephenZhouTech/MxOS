@@ -1,16 +1,15 @@
 #ifndef __MXOS_LIST_H__
 #define __MXOS_LIST_H__
 
+#include "os_types.h"
+
 typedef struct ListHead {
     struct ListHead *next, *prev;
 } ListHead_t;
 
 #define LIST_INVALID_POS            0xdeadbeef
 
-#ifndef offsetof
-#define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
-#endif
-
+#define OffsetOf(TYPE, MEMBER) ((OS_Uint32_t) &((TYPE *)0)->MEMBER)
 /**
  * ContainerOf - cast a member of a structure out to the containing structure
  * @ptr:        the pointer to the member.
@@ -18,9 +17,7 @@ typedef struct ListHead {
  * @member:     the name of the member within the struct.
  *
  */
-#define ContainerOf(ptr, type, member) ({                  \
-    const typeof( ((type *)0)->member ) *__mptr = (ptr);    \
-    (type *)( (char *)__mptr - offsetof(type,member) );})
+#define ContainerOf(ptr, type, member) ( (type *)((OS_Uint8_t *)(ptr) - OffsetOf(type, member)) )
 
 #define LIST_HEAD_INIT(name) { &(name), &(name) }
 
