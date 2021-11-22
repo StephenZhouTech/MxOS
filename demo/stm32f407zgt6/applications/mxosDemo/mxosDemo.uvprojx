@@ -140,7 +140,7 @@
           <Target>
             <UseTarget>1</UseTarget>
             <LoadApplicationAtStartup>1</LoadApplicationAtStartup>
-            <RunToMain>1</RunToMain>
+            <RunToMain>0</RunToMain>
             <RestoreBreakpoints>1</RestoreBreakpoints>
             <RestoreWatchpoints>1</RestoreWatchpoints>
             <RestoreMemoryDisplay>1</RestoreMemoryDisplay>
@@ -660,11 +660,6 @@
           <GroupName>MxOS</GroupName>
           <Files>
             <File>
-              <FileName>arch.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\..\..\arch.c</FilePath>
-            </File>
-            <File>
               <FileName>os_mem.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\os_mem.c</FilePath>
@@ -673,6 +668,11 @@
               <FileName>os_task_sch.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\os_task_sch.c</FilePath>
+            </File>
+            <File>
+              <FileName>arch.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\arm\cortex_m4\arch.c</FilePath>
             </File>
           </Files>
         </Group>

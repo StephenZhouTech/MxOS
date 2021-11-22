@@ -27,7 +27,15 @@
 typedef enum _OS_ErrorCode {
     OS_SUCCESS = 0,
     OS_NULL_POINTER,
+    OS_TASK_PRIO_OUT_OF_RANGE,
+    OS_NOT_ENOUGH_MEM_FOR_TASK_CREATE,
 } OS_ErrorCode_e;
+
+#define OS_CHECK_RETURN(Ret)                \
+{                                           \
+    if(Ret != OS_SUCCESS)                   \
+        return Ret;                         \
+}
 
 #endif // __MXOS_ERROR_CODE_H__
 

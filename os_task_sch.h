@@ -22,22 +22,28 @@
  * 1 tab == 4 spaces!
  */
 #include "os_types.h"
+#include "os_configs.h"
 
 #define OS_MAX_TASK_PRIORITY                    32
 
 typedef void (*TaskFunction_t)(void *PrivateData);
 
-OS_Uint32_t OS_API_TaskCreate(  TaskFunction_t Func,
-                                const char * Name,
-                                OS_Uint32_t StackDepth,
-                                OS_Uint32_t Priority,
-                                OS_Uint32_t *Handler,
-                                void * const Parameters);
+typedef struct _TaskInitParameter {
+    TaskFunction_t  TaskEntry;
+    OS_Uint8_t      Priority;
+    OS_Int8_t       Name[CONFIG_TASK_NAME_LEN];
+    OS_Uint32_t     StackSize;
+    void            *PrivateData;
+} TaskInitParameter;
+
+OS_Uint32_t OS_API_TaskCreate(TaskInitParameter Param, OS_Uint32_t *TaskHandle);
+void OS_API_StartKernel(void);
 
 void OS_API_TaskDelay(OS_Uint32_t TicksToDelay);
 void OS_API_TaskSuspend(OS_Uint32_t Handler);
 void OS_API_TaskResume( OS_Uint32_t Handler);
 
-void OS_API_StartTaskScheduler(void);
+void OS_API_SchedulerInit(void);
 void OS_API_SchedulerSuspend(void);
 void OS_API_SchedulerResume(void);
+

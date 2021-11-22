@@ -10,7 +10,8 @@
 
 /* Task Scheduler*/
 #define CONFIG_TASK_NAME_LEN                        (16 * OS_SIZE_BYTE)
-
-
+#define CONFIG_IDLE_TASK_STACK_SIZE                 (512 * OS_SIZE_BYTE)
+#define CONFIG_TICK_COUNT_INIT_VALUE                (0x00000000)
+#define CONFIG_SYS_TICK_RATE_HZ                     (1000)
 
 #endif // !__MXOS_CONFIG_H__

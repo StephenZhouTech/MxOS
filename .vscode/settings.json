@@ -1,6 +1,9 @@
 {
     "files.associations": {
         "os_configs.h": "c",
-        "os_error_code.h": "c"
+        "os_error_code.h": "c",
+        "os_task_sch.h": "c",
+        "stm32f4xx.h": "c",
+        "arch.h": "c"
     }
 }

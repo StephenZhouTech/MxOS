@@ -21,3 +21,51 @@
  *
  * 1 tab == 4 spaces!
  */
+
+#ifndef __MXOS_ARCH_H__
+#define __MXOS_ARCH_H__
+
+#include "os_types.h"
+
+#define ARCH_NAME                       "Cortex-M4"
+#define ARCH_BYTE_ALIGNMENT             8
+
+#if ARCH_BYTE_ALIGNMENT == 32
+    #define ARCH_BYTE_ALIGNMENT_MASK    ( 0x001f )
+#endif
+
+#if ARCH_BYTE_ALIGNMENT == 16
+    #define ARCH_BYTE_ALIGNMENT_MASK    ( 0x000f )
+#endif
+
+#if ARCH_BYTE_ALIGNMENT == 8
+    #define ARCH_BYTE_ALIGNMENT_MASK    ( 0x0007 )
+#endif
+
+#if ARCH_BYTE_ALIGNMENT == 4
+    #define ARCH_BYTE_ALIGNMENT_MASK    ( 0x0003 )
+#endif
+
+#if ARCH_BYTE_ALIGNMENT == 2
+    #define ARCH_BYTE_ALIGNMENT_MASK    ( 0x0001 )
+#endif
+
+#if ARCH_BYTE_ALIGNMENT == 1
+    #define ARCH_BYTE_ALIGNMENT_MASK    ( 0x0000 )
+#endif
+
+#ifndef ARCH_BYTE_ALIGNMENT_MASK
+    #error "Invalid ARCH_BYTE_ALIGNMENT definition"
+#endif
+
+#ifndef ARCH_NAME
+    #define ARCH_NAME NULL
+#endif
+
+void ARCH_PrepareStack(void *StartOfStack, void *Param);
+void ARCH_DisableIRQ(void);
+void ARCH_EnableIRQ(void);
+void ARCH_IRQInit(void);
+void ARCH_SystemTickInit(OS_Uint32_t TickRateHZ);
+void ARCH_StartScheduler(void);
+#endif // !__MXOS_ARCH_H__
