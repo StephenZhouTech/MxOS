@@ -36,14 +36,15 @@ typedef struct _TaskInitParameter {
     void            *PrivateData;
 } TaskInitParameter;
 
+void OS_API_KernelInit(void);
+void OS_API_KernelStart(void);
+
 OS_Uint32_t OS_API_TaskCreate(TaskInitParameter Param, OS_Uint32_t *TaskHandle);
-void OS_API_StartKernel(void);
 
 void OS_API_TaskDelay(OS_Uint32_t TicksToDelay);
 void OS_API_TaskSuspend(OS_Uint32_t Handler);
 void OS_API_TaskResume( OS_Uint32_t Handler);
 
-void OS_API_SchedulerInit(void);
 void OS_API_SchedulerSuspend(void);
 void OS_API_SchedulerResume(void);
 

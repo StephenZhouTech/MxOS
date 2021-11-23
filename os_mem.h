@@ -31,6 +31,7 @@
 
 void *OS_API_Malloc(OS_Uint32_t sz);
 void OS_API_Free(void *addr);
+void OS_MemInit(void);
 
 #if MM_DEBUG
 void *DBG_GetMemZone(void);

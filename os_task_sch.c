@@ -27,6 +27,7 @@
 #include "arch.h"
 #include "os_task_sch.h"
 #include "os_error_code.h"
+#include "os_configs.h"
 
 #define OS_TASK_MAGIC_NUMBER            0xA5
 #define OS_IDEL_TASK_PRIO               0x00
@@ -37,10 +38,10 @@ typedef enum _OS_ScheduerState {
 } OS_ScheduerState_e;
 
 typedef struct _OS_TaskControlBlock {
+    void            *Stack;
     ListHead_t      StateList;
     OS_Int8_t       TaskName[CONFIG_TASK_NAME_LEN];
     OS_Uint8_t      Priority;
-    void            *Stack;
 } OS_TCB_t;
 
 typedef struct _OS_TaskScheduler {
@@ -135,10 +136,14 @@ void OS_IdleTaskCreate(void)
     OS_API_TaskCreate(Param, (void *)&OS_IdleTaskHandle);
 }
 
-void OS_API_SchedulerInit(void)
+void OS_API_KernelInit(void)
 {
-    /* Initial the ReadList */
     OS_Uint32_t i = 0;
+
+    /* Initial the memory manager */
+    OS_MemInit();
+
+    /* Initial the task ReadyList */
     for (i = 0; i < OS_MAX_TASK_PRIORITY; i++)
     {
         ListHeadInit(&Scheduler.ReadyListHead[i]);
@@ -149,21 +154,58 @@ void OS_API_SchedulerInit(void)
     Scheduler.ScheduerState = SCHEDULER_SUSPEND;
 }
 
-void OS_API_StartKernel(void)
+OS_TCB_t * OS_TargetTaskSearch(void)
 {
-    OS_IdleTaskCreate();
+    OS_Uint8_t TargetPri = 0;
+    OS_TCB_t * TargetTCB = OS_NULL;
+#if CONFIG_ARM_ARCH
+    TargetPri = (31 - __clz(Scheduler.PriorityActive));
+#else
+    {
+        OS_Uint8_t TryBit = 31;
+        for (; TryBit >=0; TryBit--)
+        {
+            if (Scheduler.PriorityActive & (0x01 << TryBit))
+                break;
+        }
+        TargetPri = TryBit;
+    }
+#endif
+
+    OS_ASSERT(TargetPri <= 31);
+    OS_ASSERT(!ListEmpty(&Scheduler.ReadyListHead[TargetPri]));
+
+    TargetTCB = ListFirstEntry(&Scheduler.ReadyListHead[TargetPri], OS_TCB_t, StateList);
+    return TargetTCB;
+}
+
+void OS_API_KernelStart(void)
+{
+    OS_TCB_t * TargetTCB = OS_NULL;
 
     /* Close IRQ */
-    ARCH_DisableIRQ();
+    ARCH_InterruptDisable();
+
+    OS_IdleTaskCreate();
+
+    /* Find the highest priority task control block */
+    TargetTCB = OS_TargetTaskSearch();
 
     /* Configure the IRQ just like NVIC priority */
-    ARCH_IRQInit();
+    ARCH_InterruptInit();
+
+    /* Configure the misc like FPU feature */
+    ARCH_MiscInit();
 
     /* Configure System Tick for OS heart beat */
-    ARCH_SystemTickInit(CONFIG_SYS_TICK_RATE_HZ);
+    ARCH_SystemTickInit();
 
     /* Set the scheduler state to running */
     Scheduler.ScheduerState = SCHEDULER_RUNNING;
-    /* Enable IRQ */
-    ARCH_StartScheduler();
+    /* Start scheduler */
+    ARCH_StartScheduler((void *)TargetTCB);
+}
+
+void OS_SystemTickHander(void)
+{
 }

@@ -249,4 +249,13 @@ static inline void ListSpliceTail(ListHead_t *list,
 #define ListEntry(ptr, type, member) \
     ContainerOf(ptr, type, member)
 
+/**
+ * ListFirstEntry - get the first element from a list
+ * @ptr:    the list head to take the element from.
+ * @type:   the type of the struct this is embedded in.
+ * @member: the name of the ListHead within the struct.
+ */
+#define ListFirstEntry(ptr, type, member) \
+    ListEntry((ptr)->next, type, member)
+
 #endif // __MXOS_LIST_H__

@@ -24,6 +24,16 @@
 
 #include "arch.h"
 #include "os_task_sch.h"
+//#include "core_cm4.h"
+
+#if ((defined(__CC_ARM) && defined(__TARGET_FPU_VFP))                         \
+     || (defined(__CLANG_ARM) && defined(__VFP_FP__) && !defined(__SOFTFP__)) \
+     || (defined(__ICCARM__) && defined(__ARMVFP__ ))                          \
+     || (defined(__GNUC__) && defined(__VFP_FP__) && !defined(__SOFTFP__)))
+#define ARCH_FPU_USED   1
+#else
+#define ARCH_FPU_USED   0
+#endif
 
 /* Constants required to set up the initial stack. */
 #define THUMB_CODE_BIT              ( 0x01 << 24 )
@@ -36,6 +46,33 @@
 */
 #define ARCH_EXEC_RETURN            ( 0xFFFFFFFD )
 
+/*
+ * NVIC Priority,set pendsv and systick as lowset priority
+ */
+#define ARCH_NVIC_LOWEST_PRIO       255
+#define ARCH_PENDSV_PRIORITY        ARCH_NVIC_LOWEST_PRIO
+#define ARCH_SYSTICK_PRIORITY       ARCH_NVIC_LOWEST_PRIO
+
+/* The System NVIC priority register can be access by Byte */
+#define ARCH_PENDSV_PRIO_REG        0xE000ED22
+#define ARCH_SYSTICK_PRIO_REG       0xE000ED23
+
+/* SystemTick configure for MxOS heart beat */
+#define ARCH_SYSTICK_CTL            0xE000E010
+#define ARCH_SYSTICK_RELOAD         0xE000E014
+#define ARCH_SYSTICK_CURRENT        0xE000E018
+#define ARCH_SYSTICK_CABLI          0xE000E01C
+
+#define ARCH_SYSTICK_CLK_SRC        (0x01 << 2)
+#define ARCH_SYSTICK_INT            (0x01 << 1)
+#define ARCH_SYSTICK_EN             (0x01 << 0)
+
+#define ARCH_COPROCESSOR_ACCESS_CTL 0xE000ED88
+
+#define ARCH_FPU_CONTEX_CTL         0xE000EF34
+#define ARCH_FPU_ASPEN              (0x01UL << 31)
+#define ARCH_FPU_LSPEN              (0x01UL << 30)
+
 /* Note: Do not modify this struct sequence, this definiation is sort by hardware arch */
 typedef struct _TaskContext {
     OS_Uint32_t R4;
@@ -46,7 +83,9 @@ typedef struct _TaskContext {
     OS_Uint32_t R9;
     OS_Uint32_t R10;
     OS_Uint32_t R11;
+#if ARCH_FPU_USED
     OS_Uint32_t excReturn;
+#endif
     OS_Uint32_t R0;
     OS_Uint32_t R1;
     OS_Uint32_t R2;
@@ -59,7 +98,7 @@ typedef struct _TaskContext {
 
 static void TaskExitErrorEntry( void )
 {
-    __disable_irq();
+    ARCH_InterruptDisable();
     while(1);
 }
 
@@ -93,7 +132,9 @@ void ARCH_PrepareStack(void *StartOfStack, void *Param)
      * 16. |R5   |
      * 17. |R4   |
      */
+#if ARCH_FPU_USED
     taskContext->excReturn = ARCH_EXEC_RETURN;
+#endif
     taskContext->R0  = (OS_Uint32_t)TaskParam->PrivateData;
     taskContext->LR  = (OS_Uint32_t)TaskExitErrorEntry;
     taskContext->PC  = (OS_Uint32_t)TaskParam->TaskEntry;
@@ -101,27 +142,58 @@ void ARCH_PrepareStack(void *StartOfStack, void *Param)
     taskContext->R4 =  0x04040404;
 }
 
-void ARCH_DisableIRQ(void)
+void ARCH_InterruptDisable(void)
 {
-
+    __disable_irq();
 }
 
-void ARCH_EnableIRQ(void)
+void ARCH_InterruptEnable(void)
 {
-
+    __enable_irq();
 }
 
-void ARCH_IRQInit(void)
+void ARCH_InterruptInit(void)
 {
-
+    OS_REG8(ARCH_PENDSV_PRIO_REG) = ARCH_PENDSV_PRIORITY;
+    OS_REG8(ARCH_SYSTICK_PRIO_REG) = ARCH_SYSTICK_PRIORITY;
 }
 
-void ARCH_SystemTickInit(OS_Uint32_t TickRateHZ)
+void ARCH_SystemTickInit(void)
 {
-
+    OS_REG32(ARCH_SYSTICK_CTL) &= (~ARCH_SYSTICK_EN);
+    OS_REG32(ARCH_SYSTICK_RELOAD) = (CONFIG_SYS_CLOCK_RATE / CONFIG_SYS_TICK_RATE_HZ) - 1;
+    OS_REG32(ARCH_SYSTICK_CTL) |= (ARCH_SYSTICK_CLK_SRC | ARCH_SYSTICK_INT | ARCH_SYSTICK_EN);
 }
 
-void ARCH_StartScheduler(void)
+void ARCH_MiscInit(void)
 {
+#if ARCH_FPU_USED
+    /* Set CP10 and CP11 full access */
+    OS_REG32(ARCH_COPROCESSOR_ACCESS_CTL) |= ((3UL << 10*2) | (3UL << 11*2));
+    /* Enable the FPU lazy stacking feature to optimise the RTOS performance */
+    OS_REG32(ARCH_FPU_CONTEX_CTL) |= (ARCH_FPU_ASPEN | ARCH_FPU_LSPEN);
+#endif
+}
 
+__asm void ARCH_StartScheduler(void *TargetTCB)
+{
+    PRESERVE8
+
+    // Set the 0xE000ED08 to R0(VTOR)
+    ldr r0, =0xE000ED08
+    // Get the interrupt vector table address
+    ldr r0, [r0]
+    // Get the first element of the interrupt vector -- MSP
+    ldr r0, [r0]
+
+    // Recover the MSP to real MSP because we will never go back ^_^
+    msr msp, r0
+    // Enable global interrupt(PRIMASK)
+    cpsie i
+    // Enable fault interrupt(FAULTMASK)
+    cpsie f
+    dsb
+    isb
+
+    nop
 }

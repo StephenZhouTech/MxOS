@@ -63,9 +63,10 @@
 #endif
 
 void ARCH_PrepareStack(void *StartOfStack, void *Param);
-void ARCH_DisableIRQ(void);
-void ARCH_EnableIRQ(void);
-void ARCH_IRQInit(void);
-void ARCH_SystemTickInit(OS_Uint32_t TickRateHZ);
-void ARCH_StartScheduler(void);
+void ARCH_InterruptDisable(void);
+void ARCH_InterruptEnable(void);
+void ARCH_InterruptInit(void);
+void ARCH_MiscInit(void);
+void ARCH_SystemTickInit(void);
+void ARCH_StartScheduler(void *TargetTCB);
 #endif // !__MXOS_ARCH_H__

@@ -57,7 +57,6 @@ static const OS_Uint32_t MmBlkDescAlignSize = ( sizeof( MemBlockDesc_t ) + ( ( O
 
 static MemZone_t MemZone;
 static OS_Uint8_t _Heap[ CONFIG_TOTAL_HEAP_SIZE ];
-static OS_Uint8_t MemInitialFinished = 0;
 
 #if MM_DEBUG
 void *DBG_GetMemZone(void)
@@ -66,7 +65,7 @@ void *DBG_GetMemZone(void)
 }
 #endif // MM_DEBUG
 
-static void _OS_MemInit(void)
+void OS_MemInit(void)
 {
     MemBlockDesc_t *MmBlockDesc = OS_NULL;
 
@@ -128,13 +127,6 @@ void *OS_API_Malloc(OS_Uint32_t WantSize)
 
     MemBlockDesc_t *AllocteMmBlkDesc = OS_NULL;
     MemBlockDesc_t *NewMmBlkDesc     = OS_NULL;
-
-    // If the memory manager have not been init, just call this first
-    if (!MemInitialFinished)
-    {
-        _OS_MemInit();
-        MemInitialFinished = 1;
-    }
 
     if (WantSize > 0)
     {
@@ -230,9 +222,6 @@ void OS_API_Free(void *pAddr)
     ListHead_t     *ListIterator = OS_NULL;
     MemBlockDesc_t *UsedMmBlkDesc = OS_NULL;
     MemBlockDesc_t *MmBlkDescIterator = OS_NULL;
-
-    if (!MemInitialFinished)
-        return;
 
     if (pAddr != OS_NULL)
     {
