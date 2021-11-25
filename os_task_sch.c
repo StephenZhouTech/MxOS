@@ -53,7 +53,8 @@ typedef struct _OS_TaskScheduler {
     OS_Uint8_t      ScheduerState;
 } OS_TaskScheduler_t;
 
-static OS_TCB_t * volatile CurrentTCB = OS_NULL;
+OS_TCB_t * volatile CurrentTCB = OS_NULL;
+OS_TCB_t * volatile SwitchNextTCB = OS_NULL;
 static OS_TaskScheduler_t Scheduler;
 static OS_Uint32_t OS_IdleTaskHandle = 0;
 
@@ -222,10 +223,15 @@ void OS_TickTimeWrapHandle(void)
     // TODO : Handle time wraps back
 }
 
+void OS_TaskSwitchContext(void)
+{
+    CurrentTCB = SwitchNextTCB;
+}
+
 void OS_SystemTickHander(void)
 {
     OS_Uint8_t NeedSwitchCtx = 0;
-    OS_TCB_t * NextTCB = OS_NULL;
+    SwitchNextTCB = OS_NULL;
 
     ARCH_InterruptDisable();
 
@@ -235,21 +241,23 @@ void OS_SystemTickHander(void)
         OS_TickTimeWrapHandle();
     }
 
-    NextTCB = OS_TargetTaskSearch();
+    SwitchNextTCB = OS_TargetTaskSearch();
 
-    if (NextTCB->Priority >= CurrentTCB->Priority)
+    if (SwitchNextTCB->Priority > CurrentTCB->Priority)
     {
         NeedSwitchCtx = 1;
+        ListMoveTail(&SwitchNextTCB->StateList, &Scheduler.ReadyListHead[SwitchNextTCB->Priority]);
     }
 
-    if (NextTCB->Priority == CurrentTCB->Priority)
+    if ((SwitchNextTCB->Priority == CurrentTCB->Priority) && (SwitchNextTCB != CurrentTCB))
     {
-        ListMoveTail(&CurrentTCB->StateList, &Scheduler.ReadyListHead[CurrentTCB->Priority]);
+        NeedSwitchCtx = 1;
+        ListMoveTail(&SwitchNextTCB->StateList, &Scheduler.ReadyListHead[SwitchNextTCB->Priority]);
     }
 
     if (NeedSwitchCtx)
     {
-        ARCH_TriggerContextSwitch((void *)CurrentTCB, (void *)NextTCB);
+        ARCH_TriggerContextSwitch((void *)CurrentTCB, (void *)SwitchNextTCB);
     }
 
     ARCH_InterruptEnable();

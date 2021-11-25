@@ -13,12 +13,26 @@ void _delay(uint32_t cnt)
 }
 
 OS_Uint32_t task1_handle = 0;
+OS_Uint32_t task2_handle = 0;
+
+OS_Uint32_t t1_cnt = 0;
+OS_Uint32_t t2_cnt = 0;
 
 void TASK1_FUNC(void *param)
 {
-    while(1);
+    while(1)
+    {
+        t1_cnt++;
+    }
 }
 
+void TASK2_FUNC(void *param)
+{
+    while(1)
+    {
+        t2_cnt++;
+    }
+}
 int main(void)
 {
     LogInit();
@@ -41,6 +55,11 @@ int main(void)
     Param.StackSize = 1024;
     Param.TaskEntry = TASK1_FUNC;
     OS_API_TaskCreate(Param, (void *)&task1_handle);
+
+    Param.Name[0] ='m';
+    Param.Name[1] ='x';
+    Param.TaskEntry = TASK2_FUNC;
+    OS_API_TaskCreate(Param, (void *)&task2_handle);
 
     OS_API_KernelStart();
 
