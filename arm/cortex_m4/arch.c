@@ -24,7 +24,6 @@
 
 #include "arch.h"
 #include "os_task_sch.h"
-//#include "core_cm4.h"
 
 #if ((defined(__CC_ARM) && defined(__TARGET_FPU_VFP))                         \
      || (defined(__CLANG_ARM) && defined(__VFP_FP__) && !defined(__SOFTFP__)) \
@@ -73,6 +72,9 @@
 #define ARCH_FPU_ASPEN              (0x01UL << 31)
 #define ARCH_FPU_LSPEN              (0x01UL << 30)
 
+#define ARCH_NVIC_INT_CTL           0xE000ED04
+#define ARCH_PENDSV_SET             (0x01UL << 28)
+
 /* Note: Do not modify this struct sequence, this definiation is sort by hardware arch */
 typedef struct _TaskContext {
     OS_Uint32_t R4;
@@ -102,7 +104,7 @@ static void TaskExitErrorEntry( void )
     while(1);
 }
 
-void ARCH_PrepareStack(void *StartOfStack, void *Param)
+void *ARCH_PrepareStack(void *StartOfStack, void *Param)
 {
     TaskContext *taskContext = OS_NULL;
     TaskInitParameter *TaskParam = (TaskInitParameter *)Param;
@@ -139,7 +141,9 @@ void ARCH_PrepareStack(void *StartOfStack, void *Param)
     taskContext->LR  = (OS_Uint32_t)TaskExitErrorEntry;
     taskContext->PC  = (OS_Uint32_t)TaskParam->TaskEntry;
     taskContext->xPSR = ARCH_XPSR_INIT;
-    taskContext->R4 =  0x04040404;
+    taskContext->R4 =  0x44444444;
+
+    return (void *)taskContext;
 }
 
 void ARCH_InterruptDisable(void)
@@ -175,25 +179,72 @@ void ARCH_MiscInit(void)
 #endif
 }
 
+void ARCH_TriggerContextSwitch(void *_CurrentTCB, void *_NextTCB)
+{
+    OS_REG32(ARCH_NVIC_INT_CTL) |= (ARCH_PENDSV_SET);
+}
+
+void ARCH_SystemTickHander(void)
+{
+    OS_SystemTickHander();
+}
+
+OS_Uint32_t pendsv_cnt = 0;
+
+void ARCH_PendSVHandler(void)
+{
+    pendsv_cnt++;
+}
+
+__asm void ARCH_ChangeToUserMode(void)
+{
+    PRESERVE8
+    PUSH    {R4,LR}
+    MOV     R4, #3
+    MSR     CONTROL, R4
+    POP     {R4,PC}
+}
+
 __asm void ARCH_StartScheduler(void *TargetTCB)
 {
     PRESERVE8
 
     // Set the 0xE000ED08 to R0(VTOR)
-    ldr r0, =0xE000ED08
+    LDR     R1, =0xE000ED08
     // Get the interrupt vector table address
-    ldr r0, [r0]
+    LDR     R1, [R1]
     // Get the first element of the interrupt vector -- MSP
-    ldr r0, [r0]
+    LDR     R1, [R1]
+    // Recover the MSP to real MSP top because we will never go back ^_^
+    MSR     MSP, R1
 
-    // Recover the MSP to real MSP because we will never go back ^_^
-    msr msp, r0
-    // Enable global interrupt(PRIMASK)
-    cpsie i
-    // Enable fault interrupt(FAULTMASK)
-    cpsie f
-    dsb
-    isb
+    // Get the task stack pointer address of target TCB
+    LDR     R0, [R0]
+    // Set the PC relative location and the top of the stack
+#if ARCH_FPU_USED
+    MOV     R1, #60
+    MOV     R2, #64
+#else
+    MOV     R1, #56
+    MOV     R2, #60
+#endif
 
-    nop
+    // Reset highest task's PSP at the top of the task stack
+    ADDS    R2, R0, R2
+    MSR     PSP, R2
+
+    // Now the R1 is the first task entry
+    ADDS    R1, R0, R1
+    LDR     R1, [R1]
+
+    DSB
+    ISB
+
+    // Set CONTROL As 0x03 to use PSP and run in thread mode
+    MOV     R2, #2
+    MSR     CONTROL, R2
+
+    BX      R1
+    NOP
+    NOP
 }

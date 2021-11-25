@@ -18,6 +18,7 @@
 
 #define CONFIG_ARM_ARCH                             1
 
-#define OS_SystemTickHander     SysTick_Handler
+#define ARCH_SystemTickHander       SysTick_Handler
+#define ARCH_PendSVHandler          PendSV_Handler
 
 #endif // !__MXOS_CONFIG_H__

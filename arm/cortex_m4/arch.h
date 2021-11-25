@@ -62,11 +62,13 @@
     #define ARCH_NAME NULL
 #endif
 
-void ARCH_PrepareStack(void *StartOfStack, void *Param);
+void *ARCH_PrepareStack(void *StartOfStack, void *Param);
 void ARCH_InterruptDisable(void);
 void ARCH_InterruptEnable(void);
 void ARCH_InterruptInit(void);
 void ARCH_MiscInit(void);
+void ARCH_ChangeToUserMode(void);
 void ARCH_SystemTickInit(void);
 void ARCH_StartScheduler(void *TargetTCB);
+void ARCH_TriggerContextSwitch(void *_CurrentTCB, void *_NextTCB);
 #endif // !__MXOS_ARCH_H__

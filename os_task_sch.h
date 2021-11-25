@@ -48,3 +48,4 @@ void OS_API_TaskResume( OS_Uint32_t Handler);
 void OS_API_SchedulerSuspend(void);
 void OS_API_SchedulerResume(void);
 
+void OS_SystemTickHander(void);

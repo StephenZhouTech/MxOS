@@ -4,6 +4,7 @@
         "os_error_code.h": "c",
         "os_task_sch.h": "c",
         "stm32f4xx.h": "c",
-        "arch.h": "c"
+        "arch.h": "c",
+        "os_types.h": "c"
     }
 }

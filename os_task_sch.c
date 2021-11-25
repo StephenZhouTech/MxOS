@@ -39,9 +39,9 @@ typedef enum _OS_ScheduerState {
 
 typedef struct _OS_TaskControlBlock {
     void            *Stack;
+    OS_Uint8_t      Priority;
     ListHead_t      StateList;
     OS_Int8_t       TaskName[CONFIG_TASK_NAME_LEN];
-    OS_Uint8_t      Priority;
 } OS_TCB_t;
 
 typedef struct _OS_TaskScheduler {
@@ -105,7 +105,8 @@ OS_Uint32_t OS_API_TaskCreate(TaskInitParameter Param, OS_Uint32_t *TaskHandle)
     // Set the last one to zero to make sure the end of the char *
     TaskCB->TaskName[CONFIG_TASK_NAME_LEN - 1] = 0x00;
 
-    ARCH_PrepareStack((void *) TaskCB->Stack, (void *)&Param);
+    // Prepare the stack for task
+    TaskCB->Stack = ARCH_PrepareStack((void *) TaskCB->Stack, (void *)&Param);
 
     ListAdd(&TaskCB->StateList, &Scheduler.ReadyListHead[TaskCB->Priority]);
 
@@ -118,6 +119,16 @@ OS_Uint32_t OS_API_TaskCreate(TaskInitParameter Param, OS_Uint32_t *TaskHandle)
 
 void OS_IdleTask(void *Parameter)
 {
+    /*
+     *******************************************************************
+     * Because we configure and enabled the systick earlier
+     * Once we enable global irq, maybe the systick handler will be called
+     * Now we using PSP and run as thread mode
+     * So, the highest priority task will be execute in next context switch
+     ********************************************************************
+     */
+    ARCH_InterruptEnable();
+    ARCH_ChangeToUserMode();
     while (1);
 }
 
@@ -181,15 +192,14 @@ OS_TCB_t * OS_TargetTaskSearch(void)
 
 void OS_API_KernelStart(void)
 {
-    OS_TCB_t * TargetTCB = OS_NULL;
-
     /* Close IRQ */
     ARCH_InterruptDisable();
 
-    OS_IdleTaskCreate();
+    /* Set the scheduler state to running */
+    Scheduler.ScheduerState = SCHEDULER_RUNNING;
 
-    /* Find the highest priority task control block */
-    TargetTCB = OS_TargetTaskSearch();
+    /* Create Idle task */
+    OS_IdleTaskCreate();
 
     /* Configure the IRQ just like NVIC priority */
     ARCH_InterruptInit();
@@ -200,12 +210,47 @@ void OS_API_KernelStart(void)
     /* Configure System Tick for OS heart beat */
     ARCH_SystemTickInit();
 
-    /* Set the scheduler state to running */
-    Scheduler.ScheduerState = SCHEDULER_RUNNING;
+    /* The first task will be execute is Idle task */
+    CurrentTCB = (OS_TCB_t *)OS_IdleTaskHandle;
+
     /* Start scheduler */
-    ARCH_StartScheduler((void *)TargetTCB);
+    ARCH_StartScheduler((void *)OS_IdleTaskHandle);
+}
+
+void OS_TickTimeWrapHandle(void)
+{
+    // TODO : Handle time wraps back
 }
 
 void OS_SystemTickHander(void)
 {
+    OS_Uint8_t NeedSwitchCtx = 0;
+    OS_TCB_t * NextTCB = OS_NULL;
+
+    ARCH_InterruptDisable();
+
+    Scheduler.CurrentTime++;
+    if (Scheduler.CurrentTime == 0)
+    {
+        OS_TickTimeWrapHandle();
+    }
+
+    NextTCB = OS_TargetTaskSearch();
+
+    if (NextTCB->Priority >= CurrentTCB->Priority)
+    {
+        NeedSwitchCtx = 1;
+    }
+
+    if (NextTCB->Priority == CurrentTCB->Priority)
+    {
+        ListMoveTail(&CurrentTCB->StateList, &Scheduler.ReadyListHead[CurrentTCB->Priority]);
+    }
+
+    if (NeedSwitchCtx)
+    {
+        ARCH_TriggerContextSwitch((void *)CurrentTCB, (void *)NextTCB);
+    }
+
+    ARCH_InterruptEnable();
 }
