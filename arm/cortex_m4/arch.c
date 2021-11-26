@@ -215,8 +215,8 @@ void ARCH_SystemTickHander(void)
 
 //     /* Get the next TCB stack pointer */
 //     LDR     R3, =SwitchNextTCB
+//     LDR     R3, [R3]
 //     LDR     R0, [R3]
-//     LDR     R0, [R0]
 
 //     /* Pop the core registers. */
 //     LDMIA   R0!, {R4-R11, R14}
@@ -229,6 +229,10 @@ void ARCH_SystemTickHander(void)
 //     MSR     PSP, R0
 
 //     ISB
+
+//     /* Update CurrentTCB */
+//     LDR     R0, =CurrentTCB
+//     STR     R3, [R0]
 
 //     BX      R14
 // }
