@@ -223,11 +223,6 @@ void OS_TickTimeWrapHandle(void)
     // TODO : Handle time wraps back
 }
 
-void OS_TaskSwitchContext(void)
-{
-    CurrentTCB = SwitchNextTCB;
-}
-
 void OS_SystemTickHander(void)
 {
     OS_Uint8_t NeedSwitchCtx = 0;

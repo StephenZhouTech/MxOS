@@ -14,6 +14,7 @@ void _delay(uint32_t cnt)
 
 OS_Uint32_t task1_handle = 0;
 OS_Uint32_t task2_handle = 0;
+OS_Uint32_t task3_handle = 0;
 
 OS_Uint32_t t1_cnt = 0;
 OS_Uint32_t t2_cnt = 0;
@@ -23,6 +24,10 @@ void TASK1_FUNC(void *param)
     while(1)
     {
         t1_cnt++;
+        BspLEDOff(LED_2);
+        _delay(10000000);
+        BspLEDOn(LED_2);
+        _delay(10000000);
     }
 }
 
@@ -31,8 +36,25 @@ void TASK2_FUNC(void *param)
     while(1)
     {
         t2_cnt++;
+        BspLEDOn(LED_3);
+        _delay(10000000);
+        BspLEDOff(LED_3);
+        _delay(10000000);
     }
 }
+
+void TASK3_FUNC(void *param)
+{
+    while(1)
+    {
+        t2_cnt++;
+        BspLEDOn(LED_4);
+        _delay(1000000);
+        BspLEDOff(LED_4);
+        _delay(1000000);
+    }
+}
+
 int main(void)
 {
     LogInit();
@@ -60,6 +82,12 @@ int main(void)
     Param.Name[1] ='x';
     Param.TaskEntry = TASK2_FUNC;
     OS_API_TaskCreate(Param, (void *)&task2_handle);
+
+    Param.Name[0] ='y';
+    Param.Name[1] ='c';
+    Param.TaskEntry = TASK3_FUNC;
+    OS_API_TaskCreate(Param, (void *)&task3_handle);
+
 
     OS_API_KernelStart();
 

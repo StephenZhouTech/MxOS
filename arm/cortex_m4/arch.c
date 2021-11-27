@@ -189,58 +189,10 @@ void ARCH_SystemTickHander(void)
     OS_SystemTickHander();
 }
 
-// __asm void ARCH_PendSVHandler(void)
-// {
-//     extern CurrentTCB;
-//     extern SwitchNextTCB;
-
-//     PRESERVE8
-
-//     MRS     R0, PSP
-//     ISB
-
-//     /* Check if the current task is using VFP. */
-//     TST     R14, #0x10
-//     IT      EQ
-//     /* Using the lazy stacking, just store S16-S31 */
-//     VSTMDBEQ    R0!, {S16-S31}
-//     /* Store core registers */
-//     STMDB   R0!, {R4-R11, R14}
-//     /* Get the location of the current TCB. */
-//     LDR     R3, =CurrentTCB
-//     /* Now the R2 store the stack pointer of TCB */
-//     LDR     R2, [R3]
-//     /* Update the Current TCB stack pointer */
-//     STR     R0, [R2]
-
-//     /* Get the next TCB stack pointer */
-//     LDR     R3, =SwitchNextTCB
-//     LDR     R3, [R3]
-//     LDR     R0, [R3]
-
-//     /* Pop the core registers. */
-//     LDMIA   R0!, {R4-R11, R14}
-//     /* Check if the next task is using VFP. before */
-//     TST     R14, #0x10
-//     IT      EQ
-//     VLDMIAEQ R0!, {S16-S31}
-
-//     /* Set the next PSP */
-//     MSR     PSP, R0
-
-//     ISB
-
-//     /* Update CurrentTCB */
-//     LDR     R0, =CurrentTCB
-//     STR     R3, [R0]
-
-//     BX      R14
-// }
-
 __asm void ARCH_PendSVHandler(void)
 {
     extern CurrentTCB;
-    extern OS_TaskSwitchContext;
+    extern SwitchNextTCB;
 
     PRESERVE8
 
@@ -261,16 +213,10 @@ __asm void ARCH_PendSVHandler(void)
     /* Update the Current TCB stack pointer */
     STR     R0, [R2]
 
-
-    STMDB   SP!, {R0, R3}
-    DSB
-    ISB
-    BL      OS_TaskSwitchContext
-    LDMIA   SP!, {R0, R3}
-
     /* Get the next TCB stack pointer */
-    LDR     R1, [R3]
-    LDR     R0, [R1]
+    LDR     R3, =SwitchNextTCB
+    LDR     R3, [R3]
+    LDR     R0, [R3]
 
     /* Pop the core registers. */
     LDMIA   R0!, {R4-R11, R14}
@@ -284,7 +230,15 @@ __asm void ARCH_PendSVHandler(void)
 
     ISB
 
+    /* -- Context switch finished, now the next task is ready to run -- */
+
+    /* Update CurrentTCB */
+    LDR     R0, =CurrentTCB
+    STR     R3, [R0]
+
     BX      R14
+
+    NOP
 }
 
 __asm void ARCH_ChangeToUserMode(void)
