@@ -120,16 +120,6 @@ OS_Uint32_t OS_API_TaskCreate(TaskInitParameter Param, OS_Uint32_t *TaskHandle)
 
 void OS_IdleTask(void *Parameter)
 {
-    /*
-     *******************************************************************
-     * Because we configure and enabled the systick earlier
-     * Once we enable global irq, maybe the systick handler will be called
-     * Now we using PSP and run as thread mode
-     * So, the highest priority task will be execute in next context switch
-     ********************************************************************
-     */
-    ARCH_InterruptEnable();
-    ARCH_ChangeToUserMode();
     while (1);
 }
 
@@ -212,10 +202,10 @@ void OS_API_KernelStart(void)
     ARCH_SystemTickInit();
 
     /* The first task will be execute is Idle task */
-    CurrentTCB = (OS_TCB_t *)OS_IdleTaskHandle;
+    CurrentTCB = OS_TargetTaskSearch();
 
     /* Start scheduler */
-    ARCH_StartScheduler((void *)OS_IdleTaskHandle);
+    ARCH_StartScheduler((void *)CurrentTCB);
 }
 
 void OS_TickTimeWrapHandle(void)
@@ -244,10 +234,33 @@ void OS_SystemTickHander(void)
         ListMoveTail(&SwitchNextTCB->StateList, &Scheduler.ReadyListHead[SwitchNextTCB->Priority]);
     }
 
-    if ((SwitchNextTCB->Priority == CurrentTCB->Priority) && (SwitchNextTCB != CurrentTCB))
+    // The next task have the same prioirty as before
+    if (SwitchNextTCB->Priority == CurrentTCB->Priority)
     {
-        NeedSwitchCtx = 1;
-        ListMoveTail(&SwitchNextTCB->StateList, &Scheduler.ReadyListHead[SwitchNextTCB->Priority]);
+        // Check the next is the same as before
+        if (SwitchNextTCB != CurrentTCB)
+        {
+            NeedSwitchCtx = 1;
+            // Move the next to the list of highest priority list
+            ListMoveTail(&SwitchNextTCB->StateList, &Scheduler.ReadyListHead[SwitchNextTCB->Priority]);
+        }
+        else
+        {
+            // Only one task in the highest prioirty list
+            if (ListIsLast(&SwitchNextTCB->StateList, &Scheduler.ReadyListHead[SwitchNextTCB->Priority]))
+            {
+                NeedSwitchCtx = 0;
+            }
+            else
+            {
+                // more than one task in highest priority task list
+                NeedSwitchCtx = 1;
+
+                SwitchNextTCB = ListEntry(CurrentTCB->StateList.next, OS_TCB_t, StateList);
+                ListMoveTail(&CurrentTCB->StateList, &Scheduler.ReadyListHead[SwitchNextTCB->Priority]);
+                ListMoveTail(&SwitchNextTCB->StateList, &Scheduler.ReadyListHead[SwitchNextTCB->Priority]);
+            }
+        }
     }
 
     if (NeedSwitchCtx)

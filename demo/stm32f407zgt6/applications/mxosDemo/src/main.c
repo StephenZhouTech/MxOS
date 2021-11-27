@@ -24,6 +24,7 @@ void TASK1_FUNC(void *param)
     while(1)
     {
         t1_cnt++;
+        printf("T1\r\n");
         BspLEDOff(LED_2);
         _delay(10000000);
         BspLEDOn(LED_2);
@@ -36,6 +37,7 @@ void TASK2_FUNC(void *param)
     while(1)
     {
         t2_cnt++;
+        printf("T2\r\n");
         BspLEDOn(LED_3);
         _delay(10000000);
         BspLEDOff(LED_3);
@@ -87,7 +89,6 @@ int main(void)
     Param.Name[1] ='c';
     Param.TaskEntry = TASK3_FUNC;
     OS_API_TaskCreate(Param, (void *)&task3_handle);
-
 
     OS_API_KernelStart();
 

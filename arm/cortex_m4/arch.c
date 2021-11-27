@@ -241,15 +241,6 @@ __asm void ARCH_PendSVHandler(void)
     NOP
 }
 
-__asm void ARCH_ChangeToUserMode(void)
-{
-    PRESERVE8
-    PUSH    {R4,LR}
-    MOV     R4, #3
-    MSR     CONTROL, R4
-    POP     {R4,PC}
-}
-
 __asm void ARCH_StartScheduler(void *TargetTCB)
 {
     PRESERVE8
@@ -285,9 +276,14 @@ __asm void ARCH_StartScheduler(void *TargetTCB)
     DSB
     ISB
 
-    // Set CONTROL As 0x03 to use PSP and run in thread mode
+    // Set CONTROL As 0x02 to use PSP and run in privilege mode
     MOV     R2, #2
     MSR     CONTROL, R2
+
+    // Enable global interrupt(PRIMASK)
+    CPSIE   I
+    // Enable fault interrupt(FAULTMASK)
+    CPSIE   F
 
     BX      R1
     NOP
