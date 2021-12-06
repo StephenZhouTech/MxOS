@@ -3,7 +3,8 @@
         {
             "name": "Win32",
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/arch/arm/cortex_m4"
             ],
             "defines": [
                 "_DEBUG",

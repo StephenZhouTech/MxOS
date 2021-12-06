@@ -22,33 +22,36 @@
  * 1 tab == 4 spaces!
  */
 
-#ifndef __MXOS_MM_H__
-#define __MXOS_MM_H__
-
+#include "os_time.h"
 #include "os_types.h"
-#include "os_list.h"
-/*
- * Memory Manager support multi-zone with different priority
- * In default, the lower index in zone list, the higher priority to be allocated 
+#include "os_configs.h"
+
+OS_Uint32_t volatile OS_CurrentTime = 0;
+
+/* 
+ * Initial the kernel timestamp
+ * Note : This function called by OS_API_KernelInit()
  */
-
-/* MemZone_t is a struct to mamnage the whole memory */
-typedef struct _MemZone {
-    ListHead_t  FreeListHead;       /* The free list head of the memory         */
-    ListHead_t  UsedListHead;       /* The used list head of the memory         */
-    OS_Uint32_t StartAddr;          /* The start address of the memory          */
-    OS_Uint32_t TotalSize;          /* The total size of the memory(aligned)    */
-    OS_Uint32_t RemainingSize;      /* The remaining size of the memory         */
-} MemZone_t;
-
-/* MemBlockDesc_t is a struct to present every memory block */
-typedef struct _MemBlockDesc
+void OS_TimeInit(void)
 {
-    ListHead_t  List;               /* The list node in free list               */
-    OS_Uint32_t Size;               /* The memory block size                    */
-} MemBlockDesc_t;
+    OS_CurrentTime = CONFIG_TICK_COUNT_INIT_VALUE;
+}
 
-void *OS_API_Malloc(OS_Uint32_t sz);
-void OS_API_Free(void *addr);
+/* 
+ * Initial Increment kernel timestamp
+ * Note : This function called when system tick handle
+ * This should be protected with lock
+ */
+void OS_IncrementTime(void)
+{
+    OS_CurrentTime++;
+}
 
-#endif // !__MXOS_MM_H__
+/* 
+ * Get current kernel timestamp
+ * Note : This should be protected with lock
+ */
+OS_Uint32_t OS_GetCurrentTime(void)
+{
+    return OS_CurrentTime;
+}

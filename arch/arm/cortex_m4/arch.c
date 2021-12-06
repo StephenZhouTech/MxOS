@@ -23,7 +23,7 @@
  */
 
 #include "arch.h"
-#include "os_task_sch.h"
+#include "os_task.h"
 
 #if ((defined(__CC_ARM) && defined(__TARGET_FPU_VFP))                         \
      || (defined(__CLANG_ARM) && defined(__VFP_FP__) && !defined(__SOFTFP__)) \
@@ -74,6 +74,7 @@
 
 #define ARCH_NVIC_INT_CTL           0xE000ED04
 #define ARCH_PENDSV_SET             (0x01UL << 28)
+#define ARCH_ISR_ACTIVE_MASK        (0xFFUL)
 
 /* Note: Do not modify this struct sequence, this definiation is sort by hardware arch */
 typedef struct _TaskContext {
@@ -97,6 +98,8 @@ typedef struct _TaskContext {
     OS_Uint32_t PC;
     OS_Uint32_t xPSR;
 } TaskContext;
+
+extern void OS_SystemTickHander(void);
 
 static void TaskExitErrorEntry( void )
 {
@@ -169,6 +172,11 @@ void ARCH_SystemTickInit(void)
     OS_REG32(ARCH_SYSTICK_CTL) |= (ARCH_SYSTICK_CLK_SRC | ARCH_SYSTICK_INT | ARCH_SYSTICK_EN);
 }
 
+OS_Uint8_t ARCH_IsInterruptContext(void)
+{
+    return ( (OS_Uint8_t)(OS_REG32(ARCH_NVIC_INT_CTL) & ARCH_ISR_ACTIVE_MASK) );
+}
+
 void ARCH_MiscInit(void)
 {
 #if ARCH_FPU_USED
@@ -195,6 +203,9 @@ __asm void ARCH_PendSVHandler(void)
     extern SwitchNextTCB;
 
     PRESERVE8
+
+    /* Disable all interrupt to protect this function */
+    CPSID   I
 
     MRS     R0, PSP
     ISB
@@ -232,9 +243,12 @@ __asm void ARCH_PendSVHandler(void)
 
     /* -- Context switch finished, now the next task is ready to run -- */
 
-    /* Update CurrentTCB */
+    /* Update CurrentTCB to SwitchNextTCB */
     LDR     R0, =CurrentTCB
     STR     R3, [R0]
+
+    /* Enable all interrupt, next will jump to next task */
+    CPSIE   I
 
     BX      R14
 

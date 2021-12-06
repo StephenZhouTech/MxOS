@@ -7,7 +7,7 @@
 
   <Targets>
     <Target>
-      <TargetName>Template</TargetName>
+      <TargetName>MxOS_Pro</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
       <pCCUsed>5060061::V5.06 update 1 (build 61)::ARMCC</pCCUsed>
@@ -373,7 +373,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F40_41xxx,USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>..\..\cpu\cortex_m4;..\..\components\delay;..\..\components\sys;..\..\components\usart;..\..\libraries\stm32f407_fw_lib\include;.\include;..\..\components\log;..\..\bsp\include;..\..\components\lcd\st7735s;..\..\..\..\arch\arm\cortex_m4;..\..\..\..\kernel\include</IncludePath>
+              <IncludePath>..\..\cpu\cortex_m4;..\..\components\delay;..\..\components\sys;..\..\components\usart;..\..\libraries\stm32f407_fw_lib\include;.\include;..\..\components\log;..\..\bsp\include;..\..\components\lcd\st7735s;..\..\..\..\arch\arm\cortex_m4;..\..\..\..\kernel\include;..\..\..\..\kernel</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -657,9 +657,59 @@
               <FilePath>..\..\..\..\kernel\source\os_mem.c</FilePath>
             </File>
             <File>
-              <FileName>os_task_sch.c</FileName>
+              <FileName>os_critical.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\..\kernel\source\os_task_sch.c</FilePath>
+              <FilePath>..\..\..\..\kernel\source\os_critical.c</FilePath>
+            </File>
+            <File>
+              <FileName>os_kernel.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\kernel\source\os_kernel.c</FilePath>
+            </File>
+            <File>
+              <FileName>os_scheduler.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\kernel\source\os_scheduler.c</FilePath>
+            </File>
+            <File>
+              <FileName>os_task.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\kernel\source\os_task.c</FilePath>
+            </File>
+            <File>
+              <FileName>os_time.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\kernel\source\os_time.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>TestCase</GroupName>
+          <Files>
+            <File>
+              <FileName>task_tc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\testcase\task_tc.c</FilePath>
+            </File>
+            <File>
+              <FileName>mem_tc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\testcase\mem_tc.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>MxOS_DBG</GroupName>
+          <Files>
+            <File>
+              <FileName>os_dbg_mem.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\debug\os_dbg_mem.c</FilePath>
+            </File>
+            <File>
+              <FileName>os_dbg_scheduler.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\debug\os_dbg_scheduler.c</FilePath>
             </File>
           </Files>
         </Group>

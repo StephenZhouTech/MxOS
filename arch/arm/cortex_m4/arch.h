@@ -66,6 +66,7 @@ void *ARCH_PrepareStack(void *StartOfStack, void *Param);
 void ARCH_InterruptDisable(void);
 void ARCH_InterruptEnable(void);
 void ARCH_InterruptInit(void);
+OS_Uint8_t ARCH_IsInterruptContext(void);
 void ARCH_MiscInit(void);
 void ARCH_ChangeToUserMode(void);
 void ARCH_SystemTickInit(void);

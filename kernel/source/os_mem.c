@@ -27,27 +27,17 @@
 #include "os_lib.h"
 #include "arch.h"
 #include "os_mem.h"
+#include "os_critical.h"
 
-/*
- * Memory Manager support multi-zone with different priority
- * In default, the lower index in zone list, the higher priority to be allocated 
- */
+#define OS_MEM_LOCK()                   OS_API_EnterCritical()
+#define OS_MEM_UNLOCK()                 OS_API_ExitCritical()
 
-/* MemZone_t is a struct to mamnage the whole memory */
-typedef struct _MemZone {
-    ListHead_t  FreeListHead;       /* The free list head of the memory         */
-    ListHead_t  UsedListHead;       /* The used list head of the memory         */
-    OS_Uint32_t StartAddr;          /* The start address of the memory          */
-    OS_Uint32_t TotalSize;          /* The total size of the memory(aligned)    */
-    OS_Uint32_t RemainingSize;      /* The remaining size of the memory         */
-} MemZone_t;
+#if OS_DBG_MEMORY
+    #define MEM_FUNCTION_SPACE
+#else
+    #define MEM_FUNCTION_SPACE static
+#endif
 
-/* MemBlockDesc_t is a struct to present every memory block */
-typedef struct _MemBlockDesc
-{
-    ListHead_t  List;               /* The list node in free list               */
-    OS_Uint32_t Size;               /* The memory block size                    */
-} MemBlockDesc_t;
 
 /* The size of the structure placed at the beginning of each allocated memory
 block must by correctly byte aligned. */
@@ -55,15 +45,8 @@ static const OS_Uint32_t MmBlkDescAlignSize = ( sizeof( MemBlockDesc_t ) + ( ( O
 
 #define OS_MM_MIN_BLOCK_SZ          (MmBlkDescAlignSize << 1)
 
-static MemZone_t MemZone;
-static OS_Uint8_t _Heap[ CONFIG_TOTAL_HEAP_SIZE ];
-
-#if MM_DEBUG
-void *DBG_GetMemZone(void)
-{
-    return ((void *)&MemZone);
-}
-#endif // MM_DEBUG
+MEM_FUNCTION_SPACE MemZone_t MemZone;
+MEM_FUNCTION_SPACE OS_Uint8_t _Heap[ CONFIG_TOTAL_HEAP_SIZE ];
 
 void OS_MemInit(void)
 {
@@ -128,6 +111,8 @@ void *OS_API_Malloc(OS_Uint32_t WantSize)
     MemBlockDesc_t *AllocteMmBlkDesc = OS_NULL;
     MemBlockDesc_t *NewMmBlkDesc     = OS_NULL;
 
+    OS_MEM_LOCK();
+
     if (WantSize > 0)
     {
         // Calculate real os size by adding the aligned MemBlockDesc_t
@@ -176,6 +161,8 @@ void *OS_API_Malloc(OS_Uint32_t WantSize)
         // not enough memory
     }
 
+    OS_MEM_UNLOCK();
+
     return pReturnAddr;
 }
 
@@ -223,6 +210,8 @@ void OS_API_Free(void *pAddr)
     MemBlockDesc_t *UsedMmBlkDesc = OS_NULL;
     MemBlockDesc_t *MmBlkDescIterator = OS_NULL;
 
+    OS_MEM_LOCK();
+
     if (pAddr != OS_NULL)
     {
         // find the memory block descriptor first
@@ -242,4 +231,6 @@ void OS_API_Free(void *pAddr)
         // Check if it can be merged with other memory block
         _MergeMmBlock(&UsedMmBlkDesc->List);
     }
+
+    OS_MEM_UNLOCK();
 }

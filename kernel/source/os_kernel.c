@@ -21,34 +21,52 @@
  *
  * 1 tab == 4 spaces!
  */
+#include "arch.h"
+#include "os_critical.h"
+#include "os_kernel.h"
+#include "os_time.h"
 
-#ifndef __MXOS_MM_H__
-#define __MXOS_MM_H__
+extern void OS_MemInit(void);
+extern void OS_SchedulerInit(void);
+extern void OS_CriticalInit(void);
+extern void OS_IdleTaskCreate(void);
+extern void OS_FirstTaskStartup(void);
 
-#include "os_types.h"
-#include "os_list.h"
-/*
- * Memory Manager support multi-zone with different priority
- * In default, the lower index in zone list, the higher priority to be allocated 
- */
-
-/* MemZone_t is a struct to mamnage the whole memory */
-typedef struct _MemZone {
-    ListHead_t  FreeListHead;       /* The free list head of the memory         */
-    ListHead_t  UsedListHead;       /* The used list head of the memory         */
-    OS_Uint32_t StartAddr;          /* The start address of the memory          */
-    OS_Uint32_t TotalSize;          /* The total size of the memory(aligned)    */
-    OS_Uint32_t RemainingSize;      /* The remaining size of the memory         */
-} MemZone_t;
-
-/* MemBlockDesc_t is a struct to present every memory block */
-typedef struct _MemBlockDesc
+void OS_API_KernelInit(void)
 {
-    ListHead_t  List;               /* The list node in free list               */
-    OS_Uint32_t Size;               /* The memory block size                    */
-} MemBlockDesc_t;
+    /* Initial the critical */
+    OS_CriticalInit();
 
-void *OS_API_Malloc(OS_Uint32_t sz);
-void OS_API_Free(void *addr);
+    /* Initial the memory manager */
+    OS_MemInit();
 
-#endif // !__MXOS_MM_H__
+    /* Initial the task scheduler */
+    OS_SchedulerInit();
+
+    /* Initial the Timestamp value */
+    OS_TimeInit();
+}
+
+void OS_API_KernelStart(void)
+{
+    /* Lock */
+    ARCH_InterruptDisable();
+
+    /* Create Idle task */
+    OS_IdleTaskCreate();
+
+    /* Configure the IRQ just like NVIC priority */
+    ARCH_InterruptInit();
+
+    /* Configure the misc just like FPU feature */
+    ARCH_MiscInit();
+
+    /* Configure System Tick for OS heart beat */
+    ARCH_SystemTickInit();
+
+    /* Startup The first task */
+    OS_FirstTaskStartup();
+
+    /* Enable interrupt before start the first task */
+}
+

@@ -21,34 +21,10 @@
  *
  * 1 tab == 4 spaces!
  */
+#ifndef __MXOS_KERNEL_H__
+#define __MXOS_KERNEL_H__
 
-#ifndef __MXOS_MM_H__
-#define __MXOS_MM_H__
+void OS_API_KernelInit(void);
+void OS_API_KernelStart(void);
 
-#include "os_types.h"
-#include "os_list.h"
-/*
- * Memory Manager support multi-zone with different priority
- * In default, the lower index in zone list, the higher priority to be allocated 
- */
-
-/* MemZone_t is a struct to mamnage the whole memory */
-typedef struct _MemZone {
-    ListHead_t  FreeListHead;       /* The free list head of the memory         */
-    ListHead_t  UsedListHead;       /* The used list head of the memory         */
-    OS_Uint32_t StartAddr;          /* The start address of the memory          */
-    OS_Uint32_t TotalSize;          /* The total size of the memory(aligned)    */
-    OS_Uint32_t RemainingSize;      /* The remaining size of the memory         */
-} MemZone_t;
-
-/* MemBlockDesc_t is a struct to present every memory block */
-typedef struct _MemBlockDesc
-{
-    ListHead_t  List;               /* The list node in free list               */
-    OS_Uint32_t Size;               /* The memory block size                    */
-} MemBlockDesc_t;
-
-void *OS_API_Malloc(OS_Uint32_t sz);
-void OS_API_Free(void *addr);
-
-#endif // !__MXOS_MM_H__
+#endif // __MXOS_KERNEL_H__

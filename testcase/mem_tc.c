@@ -23,57 +23,125 @@
  */
 #include "os_mem.h"
 #include "os_list.h"
+#include "os_types.h"
+
 #include <stdio.h>
 
-/* MemZone_t is a struct to mamnage the whole memory */
-typedef struct _MemZone {
-    ListHead_t  FreeListHead;       /* The free list head of the memory         */
-    ListHead_t  UsedListHead;       /* The used list head of the memory         */
-    OS_Uint32_t StartAddr;          /* The start address of the memory          */
-    OS_Uint32_t TotalSize;          /* The total size of the memory(aligned)    */
-    OS_Uint32_t RemainingSize;      /* The remaining size of the memory         */
-} MemZone_t;
+void *p1 = OS_NULL;
+void *p2 = OS_NULL;
+void *p3 = OS_NULL;
+void *p4 = OS_NULL;
+void *p5 = OS_NULL;
 
-/* MemBlockDesc_t is a struct to present every memory block */
-typedef struct _MemBlockDesc
+#define P1_SIZE             512
+#define P2_SIZE             1024
+#define P3_SIZE             2048
+#define P4_SIZE             256
+#define P5_SIZE             128
+
+extern void OS_MemInit(void);
+extern MemZone_t MemZone;
+extern void OS_DBG_DumpFreeListInfo(void);
+extern void OS_DBG_DumpUsedListInfo(void);
+
+void MEM_TC_Entry(void)
 {
-    ListHead_t  List;               /* The list node in free list               */
-    OS_Uint32_t Size;               /* The memory block size                    */
-} MemBlockDesc_t;
+    OS_MemInit();
 
-void DBG_DumpFreeListInfo(void)
-{
-    ListHead_t     *ListIterator = OS_NULL;
-    MemBlockDesc_t *MmBlkDescIterator = OS_NULL;
+    printf("[Step 0] : Initial\r\n");
+    OS_DBG_DumpFreeListInfo();
+    OS_DBG_DumpUsedListInfo();
 
-    printf("******* Dump FreeList Start *******\r\n");
-
-    ListForEach(ListIterator, &MemZone.FreeListHead)
+    /* Step 1 : malloc  */
+    printf("[Step 1] : Malloc \r\n");
+    p1 = OS_API_Malloc(P1_SIZE);
+    if(p1 != OS_NULL)
     {
-        MmBlkDescIterator = (MemBlockDesc_t *)ListIterator;
-        printf("Memory Block Addr = = 0x%08X, Size = 0x%08X\r\n", MmBlkDescIterator, MmBlkDescIterator->Size);
+        printf("OS_API_Malloc %d Successful...\r\n", P1_SIZE);
     }
-    printf("******* Dump FreeList End *******\r\n");
-}
-
-void DBG_DumpUsedListInfo(void)
-{
-    ListHead_t     *ListIterator = OS_NULL;
-    MemBlockDesc_t *MmBlkDescIterator = OS_NULL;
-
-    printf("******* Dump UsedList Start *******\r\n");
-
-    ListForEach(ListIterator, &MemZone.UsedListHead)
+    else
     {
-        MmBlkDescIterator = (MemBlockDesc_t *)ListIterator;
-        printf("Memory Block Addr = = 0x%08X, Size = 0x%08X\r\n", MmBlkDescIterator, MmBlkDescIterator->Size);
+        printf("OS_API_Malloc %d Failed\r\n", P1_SIZE);
+        while (1);
     }
 
-    printf("******* Dump UsedList End *******\r\n");
-}
+    p2 = OS_API_Malloc(P2_SIZE);
+    if(p2 != OS_NULL)
+    {
+        printf("OS_API_Malloc %d Successful...\r\n", P2_SIZE);
+    }
+    else
+    {
+        printf("OS_API_Malloc %d Failed\r\n", P2_SIZE);
+        while (1);
+    }
 
-void MemTestCaseEntry(void)
-{
-    MemZone_t *DBG_MemZone = (MemZone_t *)DBG_GetMemZone();
-}
+    p3 = OS_API_Malloc(P3_SIZE);
+    if(p3 != OS_NULL)
+    {
+        printf("OS_API_Malloc %d Successful...\r\n", P3_SIZE);
+    }
+    else
+    {
+        printf("OS_API_Malloc %d Failed\r\n", P3_SIZE);
+        while (1);
+    }
 
+    p4 = OS_API_Malloc(P4_SIZE);
+    if(p4 != OS_NULL)
+    {
+        printf("OS_API_Malloc %d Successful...\r\n", P4_SIZE);
+    }
+    else
+    {
+        printf("OS_API_Malloc %d Failed\r\n", P4_SIZE);
+        while (1);
+    }
+    OS_DBG_DumpFreeListInfo();
+    OS_DBG_DumpUsedListInfo();
+
+    /* Step 2 : free p3 */
+    printf("[Step 2] : Free p3=0x%08X \r\n", p3);
+    OS_API_Free(p3);
+    OS_DBG_DumpFreeListInfo();
+    OS_DBG_DumpUsedListInfo();
+
+    /* Step 3 : malloc p5 */
+    printf("[Step 3] : Malloc p5 \r\n");
+    p5 = OS_API_Malloc(P5_SIZE);
+    if(p5 != OS_NULL)
+    {
+        printf("OS_API_Malloc %d Successful...\r\n", P4_SIZE);
+    }
+    else
+    {
+        printf("OS_API_Malloc %d Failed\r\n", P4_SIZE);
+        while (1);
+    }
+    OS_DBG_DumpFreeListInfo();
+    OS_DBG_DumpUsedListInfo();
+
+    /* Step 4 : free p4 */
+    printf("[Step 4] : Free p4=0x%08X \r\n", p4);
+    OS_API_Free(p4);
+    OS_DBG_DumpFreeListInfo();
+    OS_DBG_DumpUsedListInfo();
+
+    /* Step 5 : free p2 */
+    printf("[Step 5] : Free p2=0x%08X \r\n", p2);
+    OS_API_Free(p2);
+    OS_DBG_DumpFreeListInfo();
+    OS_DBG_DumpUsedListInfo();
+
+    /* Step 6 : free p1 */
+    printf("[Step 6] : Free p1=0x%08X \r\n", p1);
+    OS_API_Free(p1);
+    OS_DBG_DumpFreeListInfo();
+    OS_DBG_DumpUsedListInfo();
+
+    /* Step 7 : free p5 */
+    printf("[Step 7] : Free p5=0x%08X \r\n", p5);
+    OS_API_Free(p5);
+    OS_DBG_DumpFreeListInfo();
+    OS_DBG_DumpUsedListInfo();
+}

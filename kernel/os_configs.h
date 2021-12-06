@@ -3,7 +3,7 @@
 
 #include "os_types.h"
 
-#define OS_ASSERT(x)        if((x) == 0) {while(1);}
+#define OS_ASSERT(x)        if((x) == 0) {ARCH_InterruptDisable(); while(1);}
 
 /* Memory Mamanger*/
 #define CONFIG_TOTAL_HEAP_SIZE                      (32 * OS_SIZE_KB)
@@ -20,5 +20,9 @@
 
 #define ARCH_SystemTickHander       SysTick_Handler
 #define ARCH_PendSVHandler          PendSV_Handler
+
+/* OS Debug */
+#define OS_DBG_SCHEDULER                            1
+#define OS_DBG_MEMORY                               1
 
 #endif // !__MXOS_CONFIG_H__

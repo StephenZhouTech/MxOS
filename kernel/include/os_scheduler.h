@@ -22,33 +22,29 @@
  * 1 tab == 4 spaces!
  */
 
-#ifndef __MXOS_MM_H__
-#define __MXOS_MM_H__
+#ifndef __MXOS_SCHEDULER_H__
+#define __MXOS_SCHEDULER_H__
 
-#include "os_types.h"
-#include "os_list.h"
-/*
- * Memory Manager support multi-zone with different priority
- * In default, the lower index in zone list, the higher priority to be allocated 
- */
+#include "os_task.h"
 
-/* MemZone_t is a struct to mamnage the whole memory */
-typedef struct _MemZone {
-    ListHead_t  FreeListHead;       /* The free list head of the memory         */
-    ListHead_t  UsedListHead;       /* The used list head of the memory         */
-    OS_Uint32_t StartAddr;          /* The start address of the memory          */
-    OS_Uint32_t TotalSize;          /* The total size of the memory(aligned)    */
-    OS_Uint32_t RemainingSize;      /* The remaining size of the memory         */
-} MemZone_t;
+typedef struct _OS_TaskScheduler {
+    ListHead_t      ReadyListHead[OS_MAX_TASK_PRIORITY];
+    ListHead_t      BlockListHead;
+    ListHead_t      SuspendListHead;
+    ListHead_t      DelayListHead;
+    OS_Uint32_t     PriorityActive;
+    OS_Int16_t      SchedulerSuspendNesting;
+} OS_TaskScheduler_t;
 
-/* MemBlockDesc_t is a struct to present every memory block */
-typedef struct _MemBlockDesc
-{
-    ListHead_t  List;               /* The list node in free list               */
-    OS_Uint32_t Size;               /* The memory block size                    */
-} MemBlockDesc_t;
+typedef enum _OS_SchedulerStateList {
+    OS_READY_LIST = 0,
+    OS_DELAY_LIST,
+    OS_SUSPEND_LIST,
+    OS_BLOCKED_LIST
+} OS_SchedulerStateList_e;
 
-void *OS_API_Malloc(OS_Uint32_t sz);
-void OS_API_Free(void *addr);
+void OS_API_SchedulerSuspend(void);
+void OS_API_SchedulerResume(void);
+void OS_SystemTickHander(void);
 
-#endif // !__MXOS_MM_H__
+#endif // __MXOS_SCHEDULER_H__

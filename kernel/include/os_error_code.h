@@ -29,6 +29,7 @@ typedef enum _OS_ErrorCode {
     OS_NULL_POINTER,
     OS_TASK_PRIO_OUT_OF_RANGE,
     OS_NOT_ENOUGH_MEM_FOR_TASK_CREATE,
+    OS_YIELD_IN_DURING_SCH_SUSPEND,
 } OS_ErrorCode_e;
 
 #define OS_CHECK_RETURN(Ret)                \

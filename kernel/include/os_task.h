@@ -21,12 +21,26 @@
  *
  * 1 tab == 4 spaces!
  */
+
+#ifndef __MXOS_TASK_H__
+#define __MXOS_TASK_H__
+
 #include "os_types.h"
 #include "os_configs.h"
+#include "os_list.h"
 
 #define OS_MAX_TASK_PRIORITY                    32
 
 typedef void (*TaskFunction_t)(void *PrivateData);
+
+typedef struct _OS_TaskControlBlock {
+    void            *Stack;
+    OS_Uint8_t      Priority;
+    ListHead_t      StateList;
+    OS_Uint8_t      State;
+    OS_Int8_t       TaskName[CONFIG_TASK_NAME_LEN];
+    OS_Uint32_t     WakeUpTime;
+} OS_TCB_t;
 
 typedef struct _TaskInitParameter {
     TaskFunction_t  TaskEntry;
@@ -36,16 +50,17 @@ typedef struct _TaskInitParameter {
     void            *PrivateData;
 } TaskInitParameter;
 
-void OS_API_KernelInit(void);
-void OS_API_KernelStart(void);
+typedef enum _OS_TaskState {
+    OS_TASK_READY = 0,
+    OS_TASK_DELAY,
+    OS_TASK_SUSPEND,
+    OS_TASK_BLOCKED,
+    OS_TASK_UNKNOWN
+} OS_TaskState_e;
 
 OS_Uint32_t OS_API_TaskCreate(TaskInitParameter Param, OS_Uint32_t *TaskHandle);
+OS_Uint32_t OS_API_TaskDelay(OS_Uint32_t TickCnt);
+OS_Uint32_t OS_API_TaskSuspend(OS_Uint32_t TaskHandle);
+OS_Uint32_t OS_API_TaskResume(OS_Uint32_t TaskHandle);
 
-void OS_API_TaskDelay(OS_Uint32_t TicksToDelay);
-void OS_API_TaskSuspend(OS_Uint32_t Handler);
-void OS_API_TaskResume( OS_Uint32_t Handler);
-
-void OS_API_SchedulerSuspend(void);
-void OS_API_SchedulerResume(void);
-
-void OS_SystemTickHander(void);
+#endif // __MXOS_TASK_H__

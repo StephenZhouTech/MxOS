@@ -22,33 +22,35 @@
  * 1 tab == 4 spaces!
  */
 
-#ifndef __MXOS_MM_H__
-#define __MXOS_MM_H__
+#ifndef __MXOS_TIME_H__
+#define __MXOS_TIME_H__
 
 #include "os_types.h"
-#include "os_list.h"
+
+#define OS_TIME_MAX                     OS_UINT32_MAX
+#define OS_TSK_DLY_MAX                  (OS_TIME_MAX / 2)
+
 /*
- * Memory Manager support multi-zone with different priority
- * In default, the lower index in zone list, the higher priority to be allocated 
+ *  These inlines deal with timer wrapping correctly. You are
+ *  strongly encouraged to use them
+ *  1. Because people otherwise forget
+ *  2. Because if the timer wrap changes in future you won't have to
+ *     alter your driver code.
+ *
+ * OS_TIME_AFTER(a,b) returns true if the time a is after time b.
+ *
+ * Do this with "<0" and ">=0" to only test the sign of the result. A
+ * good compiler would generate better code (and a really good compiler
+ * wouldn't care). Gcc is currently neither.
  */
+#define OS_TIME_AFTER(a, b)             ((long)(b)-(long)(a)<0)
+#define OS_TIME_BEFORE(a, b)            OS_TIME_AFTER(b,a)
 
-/* MemZone_t is a struct to mamnage the whole memory */
-typedef struct _MemZone {
-    ListHead_t  FreeListHead;       /* The free list head of the memory         */
-    ListHead_t  UsedListHead;       /* The used list head of the memory         */
-    OS_Uint32_t StartAddr;          /* The start address of the memory          */
-    OS_Uint32_t TotalSize;          /* The total size of the memory(aligned)    */
-    OS_Uint32_t RemainingSize;      /* The remaining size of the memory         */
-} MemZone_t;
+#define OS_TIME_AFTER_EQ(a, b)          ((long)(a)-(long)(b)>=0)
+#define OS_TIME_BEFORE_EQ(a, b)         OS_TIME_AFTER_EQ(b,a)
 
-/* MemBlockDesc_t is a struct to present every memory block */
-typedef struct _MemBlockDesc
-{
-    ListHead_t  List;               /* The list node in free list               */
-    OS_Uint32_t Size;               /* The memory block size                    */
-} MemBlockDesc_t;
+void OS_TimeInit(void);
+void OS_IncrementTime(void);
+OS_Uint32_t OS_GetCurrentTime(void);
 
-void *OS_API_Malloc(OS_Uint32_t sz);
-void OS_API_Free(void *addr);
-
-#endif // !__MXOS_MM_H__
+#endif // __MXOS_TIME_H__
