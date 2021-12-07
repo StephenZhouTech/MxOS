@@ -45,7 +45,7 @@ static OS_Uint32_t OS_IdleTaskHandle = 0;
 extern void OS_Schedule(void);
 extern OS_TCB_t * OS_HighestPrioTaskGet(void);
 extern OS_Int16_t OS_IsSchedulerSuspending(void);
-extern void OS_TaskAddToReadyList(OS_TCB_t * TaskCB);
+extern void OS_AddTaskToReadyList(OS_TCB_t * TaskCB);
 extern void OS_TaskReadyToDelay(OS_TCB_t * TaskCB);
 
 OS_Uint32_t OS_API_TaskCreate(TaskInitParameter Param, OS_Uint32_t *TaskHandle)
@@ -95,7 +95,8 @@ OS_Uint32_t OS_API_TaskCreate(TaskInitParameter Param, OS_Uint32_t *TaskHandle)
     // Prepare the stack for task
     TaskCB->Stack = ARCH_PrepareStack((void *) TaskCB->Stack, (void *)&Param);
 
-    OS_TaskAddToReadyList(TaskCB);
+    TaskCB->State = OS_TASK_UNKNOWN;
+    OS_AddTaskToReadyList(TaskCB);
 
     TaskCB->WakeUpTime = OS_TIME_MAX;
 

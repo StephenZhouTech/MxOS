@@ -159,12 +159,12 @@ OS_Uint8_t OS_CheckTaskInTargetList(OS_TCB_t *TargetTCB, OS_Uint8_t TargetList)
     return Ret;
 }
 
-void OS_TaskAddToDelayList(OS_TCB_t *TaskCB)
+void OS_AddTaskToDelayList(OS_TCB_t *TaskCB)
 {
     ListHead_t *ListIterator = OS_NULL;
     OS_TCB_t   *TCB_Iterator = OS_NULL;
 
-    OS_ASSERT(!OS_CheckTaskInTargetList(TaskCB, OS_DELAY_LIST));
+    OS_ASSERT(TaskCB->State != OS_TASK_DELAY);
 
     if (ListEmpty(&Scheduler.DelayListHead))
     {
@@ -194,26 +194,26 @@ void OS_TaskAddToDelayList(OS_TCB_t *TaskCB)
     TaskCB->State = OS_TASK_DELAY;
 }
 
-void OS_TaskAddToReadyList(OS_TCB_t * TaskCB)
+void OS_AddTaskToReadyList(OS_TCB_t * TaskCB)
 {
-    OS_ASSERT(!OS_CheckTaskInTargetList(TaskCB, OS_READY_LIST));
+    OS_ASSERT(TaskCB->State != OS_TASK_READY);
 
     ListAdd(&TaskCB->StateList, &Scheduler.ReadyListHead[TaskCB->Priority]);
     SetPriorityActive(TaskCB->Priority);
     TaskCB->State = OS_TASK_READY;
 }
 
-void OS_TaskAddToSuspendList(OS_TCB_t * TaskCB)
+void OS_AddTaskToSuspendList(OS_TCB_t * TaskCB)
 {
-    OS_ASSERT(!OS_CheckTaskInTargetList(TaskCB, OS_SUSPEND_LIST));
+    OS_ASSERT(TaskCB->State != OS_TASK_SUSPEND);
 
     ListAdd(&TaskCB->StateList, &Scheduler.SuspendListHead);
     TaskCB->State = OS_TASK_SUSPEND;
 }
 
-void OS_TaskAddToBlockedList(OS_TCB_t * TaskCB)
+void OS_AddTaskToBlockedList(OS_TCB_t * TaskCB)
 {
-    OS_ASSERT(!OS_CheckTaskInTargetList(TaskCB, OS_BLOCKED_LIST));
+    OS_ASSERT(TaskCB->State != OS_TASK_BLOCKED);
 
     ListAdd(&TaskCB->StateList, &Scheduler.BlockListHead);
     TaskCB->State = OS_TASK_BLOCKED;
@@ -221,7 +221,7 @@ void OS_TaskAddToBlockedList(OS_TCB_t * TaskCB)
 
 void OS_RemoveTaskFromReadyList(OS_TCB_t * TaskCB)
 {
-    OS_ASSERT(OS_CheckTaskInTargetList(TaskCB, OS_READY_LIST));
+    OS_ASSERT(TaskCB->State == OS_TASK_READY);
 
     ListDel(&TaskCB->StateList);
     if ( ListEmpty(&Scheduler.ReadyListHead[TaskCB->Priority]) )
@@ -233,7 +233,7 @@ void OS_RemoveTaskFromReadyList(OS_TCB_t * TaskCB)
 
 void OS_RemoveTaskFromDelayList(OS_TCB_t * TaskCB)
 {
-    OS_ASSERT(OS_CheckTaskInTargetList(TaskCB, OS_DELAY_LIST));
+    OS_ASSERT(TaskCB->State == OS_TASK_DELAY);
 
     ListDel(&TaskCB->StateList);
     TaskCB->State = OS_TASK_UNKNOWN;
@@ -241,7 +241,7 @@ void OS_RemoveTaskFromDelayList(OS_TCB_t * TaskCB)
 
 void OS_RemoveTaskFromSuspendList(OS_TCB_t * TaskCB)
 {
-    OS_ASSERT(OS_CheckTaskInTargetList(TaskCB, OS_SUSPEND_LIST));
+    OS_ASSERT(TaskCB->State == OS_TASK_SUSPEND);
 
     ListDel(&TaskCB->StateList);
     TaskCB->State = OS_TASK_UNKNOWN;
@@ -249,7 +249,7 @@ void OS_RemoveTaskFromSuspendList(OS_TCB_t * TaskCB)
 
 void OS_RemoveTaskFromBlockedList(OS_TCB_t * TaskCB)
 {
-    OS_ASSERT(OS_CheckTaskInTargetList(TaskCB, OS_BLOCKED_LIST));
+    OS_ASSERT(TaskCB->State == OS_TASK_BLOCKED);
 
     ListDel(&TaskCB->StateList);
     TaskCB->State = OS_TASK_UNKNOWN;
@@ -260,7 +260,7 @@ void OS_TaskReadyToDelay(OS_TCB_t * TaskCB)
     /* Remove from ready list firstly */
     OS_RemoveTaskFromReadyList(TaskCB);
     /* Add it in delay list */
-    OS_TaskAddToDelayList(TaskCB);
+    OS_AddTaskToDelayList(TaskCB);
 }
 
 void OS_TaskDelayToReady(OS_TCB_t * TaskCB)
@@ -268,7 +268,7 @@ void OS_TaskDelayToReady(OS_TCB_t * TaskCB)
     /* Remove from delay list firstly */
     OS_RemoveTaskFromDelayList(TaskCB);
     /* Add it in ready list */
-    OS_TaskAddToReadyList(TaskCB);
+    OS_AddTaskToReadyList(TaskCB);
 }
 
 void OS_TaskCheckWakeUp(OS_Uint32_t time)
@@ -313,7 +313,7 @@ void OS_Schedule(void)
     SwitchNextTCB = OS_HighestPrioTaskGet();
 
     /* Check CurrentTCB is in the ready list */
-    if (!OS_CheckTaskInTargetList(CurrentTCB, OS_READY_LIST))
+    if (CurrentTCB->State != OS_TASK_READY)
     {
         NeedResch = 1;
         ListMoveTail(&SwitchNextTCB->StateList, &Scheduler.ReadyListHead[SwitchNextTCB->Priority]);

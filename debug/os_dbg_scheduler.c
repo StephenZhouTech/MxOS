@@ -38,12 +38,22 @@
 
 extern OS_TaskScheduler_t Scheduler;
 
+char *TaskStateString[] =
+{
+    "READY_STATE",
+    "DELAY_STATE",
+    "SUSPEND_STATE",
+    "BLOCKED_STATE",
+    "UNKNOWN_STATE"
+};
+
 void OS_DBG_TASK_DumpTaskInfo(OS_TCB_t *TaskCB)
 {
     printf("Dump Task Info:\r\n");
     printf("--------------------------\r\n");
     printf("Task Name: %s\r\n", TaskCB->TaskName);
     printf("Task Priority: %d\r\n", TaskCB->Priority);
+    printf("Task State: %s\r\n", TaskStateString[TaskCB->State]);
     printf("Task WakeUpTime: 0x%08X\r\n", TaskCB->WakeUpTime);
     printf("--------------------------\r\n");
 }

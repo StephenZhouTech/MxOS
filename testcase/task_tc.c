@@ -130,10 +130,10 @@ extern void OS_API_SchedulerSuspend(void);
 extern void OS_API_SchedulerResume(void);
 extern OS_Uint8_t OS_CheckTaskInTargetList(OS_TCB_t *TargetTCB, OS_Uint8_t TargetList);
 
-extern void OS_TaskAddToDelayList(OS_TCB_t *TaskCB);
-extern void OS_TaskAddToReadyList(OS_TCB_t * TaskCB);
-extern void OS_TaskAddToSuspendList(OS_TCB_t * TaskCB);
-extern void OS_TaskAddToBlockedList(OS_TCB_t * TaskCB);
+extern void OS_AddTaskToReadyList(OS_TCB_t * TaskCB);
+extern void OS_AddTaskToDelayList(OS_TCB_t *TaskCB);
+extern void OS_AddTaskToSuspendList(OS_TCB_t * TaskCB);
+extern void OS_AddTaskToBlockedList(OS_TCB_t * TaskCB);
 
 extern void OS_RemoveTaskFromReadyList(OS_TCB_t * TaskCB);
 extern void OS_RemoveTaskFromDelayList(OS_TCB_t * TaskCB);
@@ -170,7 +170,7 @@ OS_Uint8_t OS_DBG_Schedule(void)
     DBG_SwitchNextTCB = OS_HighestPrioTaskGet();
 
     /* Check DBG_CurrentTCB is in the ready list */
-    if (!OS_CheckTaskInTargetList(DBG_CurrentTCB, OS_READY_LIST))
+    if (DBG_CurrentTCB->State != OS_TASK_READY)
     {
         NeedResch = SCHEDULER_CURRENT_NOT_IN_READY;
         ListMoveTail(&DBG_SwitchNextTCB->StateList, &Scheduler.ReadyListHead[DBG_SwitchNextTCB->Priority]);
@@ -365,6 +365,64 @@ OS_Uint32_t TC_CreateTasks(void)
     return Ret;
 }
 
+OS_Uint32_t TC_CreateTasksCheckState(void)
+{
+    OS_Uint32_t Ret = OS_SUCCESS;
+    OS_TCB_t *TaskCB = OS_NULL;
+
+    TaskCB = (OS_TCB_t *)task_handle_A0;
+    if (TaskCB->State != OS_TASK_READY)
+    {
+        printf("[ERROR] : Task State not correct [line %d]\r\n", __LINE__);
+        return 0xFF;
+    }
+
+    TaskCB = (OS_TCB_t *)task_handle_A1;
+    if (TaskCB->State != OS_TASK_READY)
+    {
+        printf("[ERROR] : Task State not correct [line %d]\r\n", __LINE__);
+        return 0xFF;
+    }
+
+    TaskCB = (OS_TCB_t *)task_handle_A2;
+    if (TaskCB->State != OS_TASK_READY)
+    {
+        printf("[ERROR] : Task State not correct [line %d]\r\n", __LINE__);
+        return 0xFF;
+    }
+
+    TaskCB = (OS_TCB_t *)task_handle_B0;
+    if (TaskCB->State != OS_TASK_READY)
+    {
+        printf("[ERROR] : Task State not correct [line %d]\r\n", __LINE__);
+        return 0xFF;
+    }
+
+    TaskCB = (OS_TCB_t *)task_handle_B1;
+    if (TaskCB->State != OS_TASK_READY)
+    {
+        printf("[ERROR] : Task State not correct [line %d]\r\n", __LINE__);
+        return 0xFF;
+    }
+
+    TaskCB = (OS_TCB_t *)task_handle_C0;
+    if (TaskCB->State != OS_TASK_READY)
+    {
+        printf("[ERROR] : Task State not correct [line %d]\r\n", __LINE__);
+        return 0xFF;
+    }
+
+    TaskCB = (OS_TCB_t *)task_handle_C1;
+    if (TaskCB->State != OS_TASK_READY)
+    {
+        printf("[ERROR] : Task State not correct [line %d]\r\n", __LINE__);
+        return 0xFF;
+    }
+
+    return Ret;
+}
+
+
 OS_TCB_t * TC_HighestPriorityTaskPick(void)
 {
     OS_TCB_t *TaskCB = OS_NULL;
@@ -386,7 +444,7 @@ void TC_ReadyToReady(void)
     // should be stuck here
     printf("[TC_%d] : %s\r\n",TC_Step++, __func__);
     printf("Should stuck here\r\n");
-    OS_TaskAddToReadyList((OS_TCB_t *)task_handle_A0);
+    OS_AddTaskToReadyList((OS_TCB_t *)task_handle_A0);
     printf("[Error]:%d\r\n", __LINE__);
 }
 
@@ -402,6 +460,54 @@ void TC_RemoveFromReady(void)
     OS_RemoveTaskFromReadyList((OS_TCB_t *) task_handle_B0);
     OS_RemoveTaskFromReadyList((OS_TCB_t *) task_handle_B1);
     OS_RemoveTaskFromReadyList((OS_TCB_t *) task_handle_C1);
+
+    OS_DBG_SCH_DumpAllStateList();
+}
+
+void TC_AddToSuspendAndBlocked(void)
+{
+    printf("\r\n");
+    printf("\r\n");
+    printf("*************************************************\r\n");
+    printf("[TC_%d] : %s\r\n",TC_Step++, __func__);
+    printf("*************************************************\r\n");
+
+    OS_AddTaskToSuspendList((OS_TCB_t *) task_handle_A0);
+    OS_AddTaskToSuspendList((OS_TCB_t *) task_handle_B0);
+    OS_AddTaskToBlockedList((OS_TCB_t *) task_handle_B1);
+    OS_AddTaskToBlockedList((OS_TCB_t *) task_handle_C1);
+
+    OS_DBG_SCH_DumpAllStateList();
+}
+
+void TC_RemoveFromSuspendAndBlocked(void)
+{
+    printf("\r\n");
+    printf("\r\n");
+    printf("*************************************************\r\n");
+    printf("[TC_%d] : %s\r\n",TC_Step++, __func__);
+    printf("*************************************************\r\n");
+
+    OS_RemoveTaskFromSuspendList((OS_TCB_t *) task_handle_A0);
+    OS_RemoveTaskFromSuspendList((OS_TCB_t *) task_handle_B0);
+    OS_RemoveTaskFromBlockedList((OS_TCB_t *) task_handle_B1);
+    OS_RemoveTaskFromBlockedList((OS_TCB_t *) task_handle_C1);
+
+    OS_DBG_SCH_DumpAllStateList();
+}
+
+void TC_AddToReady(void)
+{
+    printf("\r\n");
+    printf("\r\n");
+    printf("*************************************************\r\n");
+    printf("[TC_%d] : %s\r\n",TC_Step++, __func__);
+    printf("*************************************************\r\n");
+
+    OS_AddTaskToReadyList((OS_TCB_t *) task_handle_A0);
+    OS_AddTaskToReadyList((OS_TCB_t *) task_handle_B0);
+    OS_AddTaskToReadyList((OS_TCB_t *) task_handle_B1);
+    OS_AddTaskToReadyList((OS_TCB_t *) task_handle_C1);
 
     OS_DBG_SCH_DumpAllStateList();
 }
@@ -424,19 +530,19 @@ void TC_AddToDelay(void)
 
     OS_TCB_t *TaskCB = (OS_TCB_t *)task_handle_A0;
     TaskCB->WakeUpTime = 0x00F0;
-    OS_TaskAddToDelayList(TaskCB);
+    OS_AddTaskToDelayList(TaskCB);
 
     TaskCB = (OS_TCB_t *)task_handle_B0;
     TaskCB->WakeUpTime = 0x0100;
-    OS_TaskAddToDelayList(TaskCB);
+    OS_AddTaskToDelayList(TaskCB);
 
     TaskCB = (OS_TCB_t *)task_handle_B1;
     TaskCB->WakeUpTime = 0x0030;
-    OS_TaskAddToDelayList(TaskCB);
+    OS_AddTaskToDelayList(TaskCB);
 
     TaskCB = (OS_TCB_t *)task_handle_C1;
     TaskCB->WakeUpTime = 0x00F0;
-    OS_TaskAddToDelayList(TaskCB);
+    OS_AddTaskToDelayList(TaskCB);
 
     OS_DBG_SCH_DumpAllStateList();
 }
@@ -445,7 +551,7 @@ void TC_DelayToDelay(void)
 {
     printf("[TC_%d] : %s\r\n",TC_Step++, __func__);
     printf("Should stuck here\r\n");
-    OS_TaskAddToDelayList((OS_TCB_t *)task_handle_B0);
+    OS_AddTaskToDelayList((OS_TCB_t *)task_handle_B0);
     printf("[Error]:%d\r\n", __LINE__);
 }
 
@@ -457,19 +563,19 @@ void TC_WakeUpFromDelay(void)
     printf("[TC_%d] : %s\r\n",TC_Step++, __func__);
     printf("*************************************************\r\n");
 
-    printf("Set Current Time = 0x29\r\n");
+    printf("-------- Set Current Time = 0x29 --------\r\n");
     OS_TaskCheckWakeUp(0x29);
     OS_DBG_SCH_DumpAllStateList();
 
-    printf("Set Current Time = 0x30\r\n");
+    printf("-------- Set Current Time = 0x30 --------\r\n");
     OS_TaskCheckWakeUp(0x30);
     OS_DBG_SCH_DumpAllStateList();
 
-    printf("Set Current Time = 0xFF\r\n");
+    printf("-------- Set Current Time = 0xFF --------\r\n");
     OS_TaskCheckWakeUp(0xFF);
     OS_DBG_SCH_DumpAllStateList();
 
-    printf("Set Current Time = 0x200\r\n");
+    printf("-------- Set Current Time = 0x200 --------\r\n");
     OS_TaskCheckWakeUp(0x200);
     OS_DBG_SCH_DumpAllStateList();
 }
@@ -497,6 +603,12 @@ void SCH_TC_Entry(void)
     if (Ret != OS_SUCCESS)
     {
         printf("[Error] : Create Tasks Failed\r\n");
+        while(1);
+    }
+    TC_CreateTasksCheckState();
+    if (Ret != OS_SUCCESS)
+    {
+        printf("[Error] : Create Tasks CheckState Failed\r\n");
         while(1);
     }
     TC_PASS();
@@ -544,6 +656,31 @@ void SCH_TC_Entry(void)
         printf("[Error] : C1 still in ready list\r\n");
         while(1);
     }
+
+    TaskCB = (OS_TCB_t *)task_handle_A0;
+    if (TaskCB->State != OS_TASK_UNKNOWN)
+    {
+        printf("[ERROR] : Task State not correct [line %d]\r\n", __LINE__);
+        while(1);
+    }
+    TaskCB = (OS_TCB_t *)task_handle_B0;
+    if (TaskCB->State != OS_TASK_UNKNOWN)
+    {
+        printf("[ERROR] : Task State not correct [line %d]\r\n", __LINE__);
+        while(1);
+    }
+    TaskCB = (OS_TCB_t *)task_handle_B1;
+    if (TaskCB->State != OS_TASK_UNKNOWN)
+    {
+        printf("[ERROR] : Task State not correct [line %d]\r\n", __LINE__);
+        while(1);
+    }
+    TaskCB = (OS_TCB_t *)task_handle_C1;
+    if (TaskCB->State != OS_TASK_UNKNOWN)
+    {
+        printf("[ERROR] : Task State not correct [line %d]\r\n", __LINE__);
+        while(1);
+    }
     TC_PASS();
 
     TaskCB = TC_HighestPriorityTaskPick();
@@ -589,6 +726,32 @@ void SCH_TC_Entry(void)
         printf("[Error] : C1 not in delay list\r\n");
         while(1);
     }
+
+    TaskCB = (OS_TCB_t *)task_handle_A0;
+    if (TaskCB->State != OS_TASK_DELAY)
+    {
+        printf("[ERROR] : Task State not correct [line %d]\r\n", __LINE__);
+        while(1);
+    }
+    TaskCB = (OS_TCB_t *)task_handle_B0;
+    if (TaskCB->State != OS_TASK_DELAY)
+    {
+        printf("[ERROR] : Task State not correct [line %d]\r\n", __LINE__);
+        while(1);
+    }
+    TaskCB = (OS_TCB_t *)task_handle_B1;
+    if (TaskCB->State != OS_TASK_DELAY)
+    {
+        printf("[ERROR] : Task State not correct [line %d]\r\n", __LINE__);
+        while(1);
+    }
+    TaskCB = (OS_TCB_t *)task_handle_C1;
+    if (TaskCB->State != OS_TASK_DELAY)
+    {
+        printf("[ERROR] : Task State not correct [line %d]\r\n", __LINE__);
+        while(1);
+    }
+
     TC_PASS();
 
     /* NOTE : Should Stuck here */
@@ -622,8 +785,235 @@ void SCH_TC_Entry(void)
         printf("[Error] : C1 not in ready list\r\n");
         while(1);
     }
+
+    TaskCB = (OS_TCB_t *)task_handle_A0;
+    if (TaskCB->State != OS_TASK_READY)
+    {
+        printf("[ERROR] : Task State not correct [line %d]\r\n", __LINE__);
+        while(1);
+    }
+    TaskCB = (OS_TCB_t *)task_handle_B0;
+    if (TaskCB->State != OS_TASK_READY)
+    {
+        printf("[ERROR] : Task State not correct [line %d]\r\n", __LINE__);
+        while(1);
+    }
+    TaskCB = (OS_TCB_t *)task_handle_B1;
+    if (TaskCB->State != OS_TASK_READY)
+    {
+        printf("[ERROR] : Task State not correct [line %d]\r\n", __LINE__);
+        while(1);
+    }
+    TaskCB = (OS_TCB_t *)task_handle_C1;
+    if (TaskCB->State != OS_TASK_READY)
+    {
+        printf("[ERROR] : Task State not correct [line %d]\r\n", __LINE__);
+        while(1);
+    }
     TC_PASS();
 
+
+    TC_RemoveFromReady();
+    if (OS_CheckTaskInTargetList((OS_TCB_t *)task_handle_A0, OS_READY_LIST))
+    {
+        printf("[Error] : A0 still in ready list\r\n");
+        while(1);
+    }
+    if (OS_CheckTaskInTargetList((OS_TCB_t *)task_handle_B0, OS_READY_LIST))
+    {
+        printf("[Error] : B0 still in ready list\r\n");
+        while(1);
+    }
+    if (OS_CheckTaskInTargetList((OS_TCB_t *)task_handle_B1, OS_READY_LIST))
+    {
+        printf("[Error] : B1 still in ready list\r\n");
+        while(1);
+    }
+    if (OS_CheckTaskInTargetList((OS_TCB_t *)task_handle_C1, OS_READY_LIST))
+    {
+        printf("[Error] : C1 still in ready list\r\n");
+        while(1);
+    }
+    TaskCB = (OS_TCB_t *)task_handle_A0;
+    if (TaskCB->State != OS_TASK_UNKNOWN)
+    {
+        printf("[ERROR] : Task State not correct [line %d]\r\n", __LINE__);
+        while(1);
+    }
+    TaskCB = (OS_TCB_t *)task_handle_B0;
+    if (TaskCB->State != OS_TASK_UNKNOWN)
+    {
+        printf("[ERROR] : Task State not correct [line %d]\r\n", __LINE__);
+        while(1);
+    }
+    TaskCB = (OS_TCB_t *)task_handle_B1;
+    if (TaskCB->State != OS_TASK_UNKNOWN)
+    {
+        printf("[ERROR] : Task State not correct [line %d]\r\n", __LINE__);
+        while(1);
+    }
+    TaskCB = (OS_TCB_t *)task_handle_C1;
+    if (TaskCB->State != OS_TASK_UNKNOWN)
+    {
+        printf("[ERROR] : Task State not correct [line %d]\r\n", __LINE__);
+        while(1);
+    }
+    TC_PASS();
+
+
+    TC_AddToSuspendAndBlocked();
+    if (!OS_CheckTaskInTargetList((OS_TCB_t *)task_handle_A0, OS_SUSPEND_LIST))
+    {
+        printf("[Error] : A0 not in ready list\r\n");
+        while(1);
+    }
+    if (!OS_CheckTaskInTargetList((OS_TCB_t *)task_handle_B0, OS_SUSPEND_LIST))
+    {
+        printf("[Error] : B0 not in ready list\r\n");
+        while(1);
+    }
+    if (!OS_CheckTaskInTargetList((OS_TCB_t *)task_handle_B1, OS_BLOCKED_LIST))
+    {
+        printf("[Error] : B1 not in ready list\r\n");
+        while(1);
+    }
+    if (!OS_CheckTaskInTargetList((OS_TCB_t *)task_handle_C1, OS_BLOCKED_LIST))
+    {
+        printf("[Error] : C1 not in ready list\r\n");
+        while(1);
+    }
+
+    TaskCB = (OS_TCB_t *)task_handle_A0;
+    if (TaskCB->State != OS_TASK_SUSPEND)
+    {
+        printf("[ERROR] : Task State not correct [line %d]\r\n", __LINE__);
+        while(1);
+    }
+    TaskCB = (OS_TCB_t *)task_handle_B0;
+    if (TaskCB->State != OS_TASK_SUSPEND)
+    {
+        printf("[ERROR] : Task State not correct [line %d]\r\n", __LINE__);
+        while(1);
+    }
+    TaskCB = (OS_TCB_t *)task_handle_B1;
+    if (TaskCB->State != OS_TASK_BLOCKED)
+    {
+        printf("[ERROR] : Task State not correct [line %d]\r\n", __LINE__);
+        while(1);
+    }
+    TaskCB = (OS_TCB_t *)task_handle_C1;
+    if (TaskCB->State != OS_TASK_BLOCKED)
+    {
+        printf("[ERROR] : Task State not correct [line %d]\r\n", __LINE__);
+        while(1);
+    }
+    TC_PASS();
+
+    TC_RemoveFromSuspendAndBlocked();
+    if (OS_CheckTaskInTargetList((OS_TCB_t *)task_handle_A0, OS_SUSPEND_LIST))
+    {
+        printf("[Error] : A0 still in ready list\r\n");
+        while(1);
+    }
+    if (OS_CheckTaskInTargetList((OS_TCB_t *)task_handle_B0, OS_SUSPEND_LIST))
+    {
+        printf("[Error] : B0 still in ready list\r\n");
+        while(1);
+    }
+    if (OS_CheckTaskInTargetList((OS_TCB_t *)task_handle_B1, OS_BLOCKED_LIST))
+    {
+        printf("[Error] : B1 still in ready list\r\n");
+        while(1);
+    }
+    if (OS_CheckTaskInTargetList((OS_TCB_t *)task_handle_C1, OS_BLOCKED_LIST))
+    {
+        printf("[Error] : C1 still in ready list\r\n");
+        while(1);
+    }
+    TaskCB = (OS_TCB_t *)task_handle_A0;
+    if (TaskCB->State != OS_TASK_UNKNOWN)
+    {
+        printf("[ERROR] : Task State not correct [line %d]\r\n", __LINE__);
+        while(1);
+    }
+    TaskCB = (OS_TCB_t *)task_handle_B0;
+    if (TaskCB->State != OS_TASK_UNKNOWN)
+    {
+        printf("[ERROR] : Task State not correct [line %d]\r\n", __LINE__);
+        while(1);
+    }
+    TaskCB = (OS_TCB_t *)task_handle_B1;
+    if (TaskCB->State != OS_TASK_UNKNOWN)
+    {
+        printf("[ERROR] : Task State not correct [line %d]\r\n", __LINE__);
+        while(1);
+    }
+    TaskCB = (OS_TCB_t *)task_handle_C1;
+    if (TaskCB->State != OS_TASK_UNKNOWN)
+    {
+        printf("[ERROR] : Task State not correct [line %d]\r\n", __LINE__);
+        while(1);
+    }
+    TC_PASS();
+
+    TC_AddToReady();
+    if (!OS_CheckTaskInTargetList((OS_TCB_t *)task_handle_A0, OS_READY_LIST))
+    {
+        printf("[Error] : A0 not in ready list\r\n");
+        while(1);
+    }
+    if (!OS_CheckTaskInTargetList((OS_TCB_t *)task_handle_B0, OS_READY_LIST))
+    {
+        printf("[Error] : B0 not in ready list\r\n");
+        while(1);
+    }
+    if (!OS_CheckTaskInTargetList((OS_TCB_t *)task_handle_B1, OS_READY_LIST))
+    {
+        printf("[Error] : B1 not in ready list\r\n");
+        while(1);
+    }
+    if (!OS_CheckTaskInTargetList((OS_TCB_t *)task_handle_C1, OS_READY_LIST))
+    {
+        printf("[Error] : C1 not in ready list\r\n");
+        while(1);
+    }
+
+    TaskCB = (OS_TCB_t *)task_handle_A0;
+    if (TaskCB->State != OS_TASK_READY)
+    {
+        printf("[ERROR] : Task State not correct [line %d]\r\n", __LINE__);
+        while(1);
+    }
+    TaskCB = (OS_TCB_t *)task_handle_B0;
+    if (TaskCB->State != OS_TASK_READY)
+    {
+        printf("[ERROR] : Task State not correct [line %d]\r\n", __LINE__);
+        while(1);
+    }
+    TaskCB = (OS_TCB_t *)task_handle_B1;
+    if (TaskCB->State != OS_TASK_READY)
+    {
+        printf("[ERROR] : Task State not correct [line %d]\r\n", __LINE__);
+        while(1);
+    }
+    TaskCB = (OS_TCB_t *)task_handle_C1;
+    if (TaskCB->State != OS_TASK_READY)
+    {
+        printf("[ERROR] : Task State not correct [line %d]\r\n", __LINE__);
+        while(1);
+    }
+    TC_PASS();
+
+    /*************************************************************/
+    /********************* Test For Schedule *********************/
+    /*************************************************************/
+    /*
+     * ------------------------------
+     * A0/A1/A2 Priority=1      Ready
+     * B0/B1    Priority=15     Ready
+     * C0/C1    Priority=31     Ready
+     * ------------------------------
+     */
     /* Scheduler Test Case */
     DBG_CurrentTCB = (OS_TCB_t *)task_handle_C1;
     Sch_Ret = OS_DBG_Schedule();
@@ -692,7 +1082,7 @@ void SCH_TC_Entry(void)
     }
     DBG_CurrentTCB = DBG_SwitchNextTCB;
 
-    OS_TaskAddToReadyList((OS_TCB_t *) task_handle_C0);
+    OS_AddTaskToReadyList((OS_TCB_t *) task_handle_C0);
     Sch_Ret = OS_DBG_Schedule();
     if (Sch_Ret == SCHEDULER_NEXT_HIGHER_THAN_CURRENT && ((OS_Uint32_t)DBG_SwitchNextTCB == task_handle_C0))
     {

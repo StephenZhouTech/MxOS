@@ -46,6 +46,10 @@ extern void OS_DBG_DumpUsedListInfo(void);
 
 void MEM_TC_Entry(void)
 {
+    printf("**********************************************************\r\n");
+    printf("********************* MEM_TC_Entry ***********************\r\n");
+    printf("**********************************************************\r\n");
+
     OS_MemInit();
 
     printf("[Step 0] : Initial\r\n");
@@ -144,4 +148,6 @@ void MEM_TC_Entry(void)
     OS_API_Free(p5);
     OS_DBG_DumpFreeListInfo();
     OS_DBG_DumpUsedListInfo();
+
+    printf("********************* MEM TC Finished ***********************\r\n");
 }
