@@ -7,6 +7,10 @@
         "arch.h": "c",
         "os_types.h": "c",
         "os_scheduler.h": "c",
-        "os_time.h": "c"
+        "os_time.h": "c",
+        "os_mem.h": "c",
+        "os_critical.h": "c",
+        "os_trace.h": "c",
+        "os_list.h": "c"
     }
 }

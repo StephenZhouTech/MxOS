@@ -22,9 +22,9 @@
  * 1 tab == 4 spaces!
  */
 
+#include "arch.h"
 #include "os_types.h"
 #include "os_configs.h"
-#include "arch.h"
 
 static OS_Int16_t CriticalNesting = 0;
 

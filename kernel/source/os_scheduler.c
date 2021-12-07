@@ -22,14 +22,15 @@
  * 1 tab == 4 spaces!
  */
 
-#include "os_list.h"
 #include "arch.h"
+#include "os_time.h"
+#include "os_list.h"
 #include "os_types.h"
-#include "os_error_code.h"
+#include "os_trace.h"
 #include "os_configs.h"
 #include "os_critical.h"
-#include "os_time.h"
 #include "os_scheduler.h"
+#include "os_error_code.h"
 
 #define OS_SCHEDULER_LOCK()               OS_API_EnterCritical()
 #define OS_SCHEDULER_UNLOCK()             OS_API_ExitCritical()
@@ -86,8 +87,10 @@ OS_Int16_t OS_IsSchedulerSuspending(void)
     OS_Int16_t IsSuspending = 0;
 
     OS_SCHEDULER_LOCK();
+
     IsSuspending = Scheduler.SchedulerSuspendNesting;
     OS_ASSERT(IsSuspending >= 0);
+
     OS_SCHEDULER_UNLOCK();
 
     return IsSuspending;
@@ -97,6 +100,9 @@ void OS_API_SchedulerSuspend(void)
 {
     OS_SCHEDULER_LOCK();
     Scheduler.SchedulerSuspendNesting++;
+
+    TRACE_SchedulerSuspend(Scheduler.SchedulerSuspendNesting);
+
     OS_SCHEDULER_UNLOCK();
 }
 
@@ -104,6 +110,9 @@ void OS_API_SchedulerResume(void)
 {
     OS_SCHEDULER_LOCK();
     Scheduler.SchedulerSuspendNesting--;
+
+    TRACE_SchedulerResume(Scheduler.SchedulerSuspendNesting);
+
     OS_ASSERT(Scheduler.SchedulerSuspendNesting >= 0);
     OS_SCHEDULER_UNLOCK();
 }
@@ -159,6 +168,17 @@ OS_Uint8_t OS_CheckTaskInTargetList(OS_TCB_t *TargetTCB, OS_Uint8_t TargetList)
     return Ret;
 }
 
+void OS_AddTaskToReadyList(OS_TCB_t * TaskCB)
+{
+    OS_ASSERT(TaskCB->State != OS_TASK_READY);
+
+    ListAdd(&TaskCB->StateList, &Scheduler.ReadyListHead[TaskCB->Priority]);
+    SetPriorityActive(TaskCB->Priority);
+    TaskCB->State = OS_TASK_READY;
+
+    TRACE_AddToTargetList(TP_READY_LIST, TaskCB);
+}
+
 void OS_AddTaskToDelayList(OS_TCB_t *TaskCB)
 {
     ListHead_t *ListIterator = OS_NULL;
@@ -192,15 +212,8 @@ void OS_AddTaskToDelayList(OS_TCB_t *TaskCB)
         }
     }
     TaskCB->State = OS_TASK_DELAY;
-}
 
-void OS_AddTaskToReadyList(OS_TCB_t * TaskCB)
-{
-    OS_ASSERT(TaskCB->State != OS_TASK_READY);
-
-    ListAdd(&TaskCB->StateList, &Scheduler.ReadyListHead[TaskCB->Priority]);
-    SetPriorityActive(TaskCB->Priority);
-    TaskCB->State = OS_TASK_READY;
+    TRACE_AddToTargetList(TP_DELAY_LIST, TaskCB);
 }
 
 void OS_AddTaskToSuspendList(OS_TCB_t * TaskCB)
@@ -209,6 +222,8 @@ void OS_AddTaskToSuspendList(OS_TCB_t * TaskCB)
 
     ListAdd(&TaskCB->StateList, &Scheduler.SuspendListHead);
     TaskCB->State = OS_TASK_SUSPEND;
+
+    TRACE_AddToTargetList(TP_SUSPEND_LIST, TaskCB);
 }
 
 void OS_AddTaskToBlockedList(OS_TCB_t * TaskCB)
@@ -217,6 +232,8 @@ void OS_AddTaskToBlockedList(OS_TCB_t * TaskCB)
 
     ListAdd(&TaskCB->StateList, &Scheduler.BlockListHead);
     TaskCB->State = OS_TASK_BLOCKED;
+
+    TRACE_AddToTargetList(TP_BLOCKED_LIST, TaskCB);
 }
 
 void OS_RemoveTaskFromReadyList(OS_TCB_t * TaskCB)
@@ -229,6 +246,8 @@ void OS_RemoveTaskFromReadyList(OS_TCB_t * TaskCB)
         ClearPriorityActive(TaskCB->Priority);
     }
     TaskCB->State = OS_TASK_UNKNOWN;
+
+    TRACE_RemoveFromTargetList(TP_READY_LIST, TaskCB);
 }
 
 void OS_RemoveTaskFromDelayList(OS_TCB_t * TaskCB)
@@ -237,6 +256,8 @@ void OS_RemoveTaskFromDelayList(OS_TCB_t * TaskCB)
 
     ListDel(&TaskCB->StateList);
     TaskCB->State = OS_TASK_UNKNOWN;
+
+    TRACE_RemoveFromTargetList(TP_DELAY_LIST, TaskCB);
 }
 
 void OS_RemoveTaskFromSuspendList(OS_TCB_t * TaskCB)
@@ -245,6 +266,8 @@ void OS_RemoveTaskFromSuspendList(OS_TCB_t * TaskCB)
 
     ListDel(&TaskCB->StateList);
     TaskCB->State = OS_TASK_UNKNOWN;
+
+    TRACE_RemoveFromTargetList(TP_SUSPEND_LIST, TaskCB);
 }
 
 void OS_RemoveTaskFromBlockedList(OS_TCB_t * TaskCB)
@@ -253,6 +276,8 @@ void OS_RemoveTaskFromBlockedList(OS_TCB_t * TaskCB)
 
     ListDel(&TaskCB->StateList);
     TaskCB->State = OS_TASK_UNKNOWN;
+
+    TRACE_RemoveFromTargetList(TP_BLOCKED_LIST, TaskCB);
 }
 
 void OS_TaskReadyToDelay(OS_TCB_t * TaskCB)
@@ -289,6 +314,8 @@ void OS_TaskCheckWakeUp(OS_Uint32_t time)
         // Check if the task is timeout
         if (OS_TIME_AFTER_EQ(time, TCB_Iterator->WakeUpTime))
         {
+            TRACE_TaskDelayTimeout(TCB_Iterator);
+
             ListIterator_prev = ListIterator->prev;
             OS_TaskDelayToReady(TCB_Iterator);
             // Current ListIterator will link to ready list, relocate the pointer
@@ -359,6 +386,8 @@ void OS_Schedule(void)
 _OS_ScheduleRightNow:
     if (NeedResch)
     {
+        TRACE_ContextSwitch(CurrentTCB, SwitchNextTCB, OS_GetCurrentTime());
+
         ARCH_TriggerContextSwitch((void *)CurrentTCB, (void *)SwitchNextTCB);
     }
 }
@@ -389,6 +418,8 @@ void OS_SystemTickHander(void)
 
     /* Increment of System Tick */
     OS_IncrementTime();
+
+    TRACE_IncrementTick(OS_GetCurrentTime());
 
     OS_TaskCheckWakeUp(OS_GetCurrentTime());
 

@@ -21,16 +21,17 @@
  *
  * 1 tab == 4 spaces!
  */
-#include "os_list.h"
+#include "arch.h"
 #include "os_lib.h"
 #include "os_mem.h"
-#include "arch.h"
+#include "os_list.h"
+#include "os_time.h"
 #include "os_task.h"
-#include "os_error_code.h"
+#include "os_trace.h"
 #include "os_configs.h"
 #include "os_critical.h"
-#include "os_time.h"
 #include "os_scheduler.h"
+#include "os_error_code.h"
 
 #define OS_TASK_MAGIC_NUMBER            0xA5
 #define OS_IDEL_TASK_PRIO               0x00
@@ -102,6 +103,8 @@ OS_Uint32_t OS_API_TaskCreate(TaskInitParameter Param, OS_Uint32_t *TaskHandle)
 
     *TaskHandle = (OS_Uint32_t)TaskCB;
 
+    TRACE_TaskCreate(TaskCB);
+
     OS_TASK_UNLOCK();
 
     return OS_SUCCESS;
@@ -117,7 +120,10 @@ OS_Uint32_t OS_API_TaskYield(void)
     OS_ASSERT(OS_IsSchedulerSuspending() == 0);
 
     OS_TASK_LOCK();
+
+    TRACE_TaskYield(CurrentTCB);
     OS_Schedule();
+
     OS_TASK_UNLOCK();
 
     return OS_SUCCESS;
@@ -138,6 +144,9 @@ OS_Uint32_t OS_API_TaskDelay(OS_Uint32_t TickCnt)
     else
     {
         CurrentTCB->WakeUpTime = OS_GetCurrentTime() + TickCnt;
+
+        TRACE_TaskDelay(CurrentTCB, TickCnt);
+
         OS_TaskReadyToDelay(CurrentTCB);
         OS_Schedule();
     }
@@ -150,6 +159,8 @@ OS_Uint32_t OS_API_TaskDelay(OS_Uint32_t TickCnt)
 OS_Uint32_t OS_API_TaskSuspend(OS_Uint32_t TaskHandle)
 {
     OS_TASK_LOCK();
+
+    TRACE_TaskSuspend((OS_TCB_t *)TaskHandle);
 
     OS_TASK_UNLOCK();
 

@@ -88,12 +88,12 @@ int main(void)
 
     BspLedInit();
 
-#if TC_SCHEDULER_IN_MAIN
-    SCH_TC_Entry();
-#endif
-
 #if TC_MEM_IN_MAIN
     MEM_TC_Entry();
+#endif
+
+#if TC_SCHEDULER_IN_MAIN
+    SCH_TC_Entry();
 #endif
 
 #if DEMO_SHOW
@@ -131,9 +131,9 @@ int main(void)
 
     while(1)
     {
-        _delay(100000000);
+        _delay(10000000);
         BspLEDOn(LED_2 | LED_3 | LED_4);
-        _delay(100000000);
+        _delay(10000000);
         BspLEDOff(LED_2 | LED_3 | LED_4);
     }
 }

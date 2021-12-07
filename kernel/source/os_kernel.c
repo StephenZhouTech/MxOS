@@ -22,9 +22,9 @@
  * 1 tab == 4 spaces!
  */
 #include "arch.h"
-#include "os_critical.h"
-#include "os_kernel.h"
 #include "os_time.h"
+#include "os_kernel.h"
+#include "os_critical.h"
 
 extern void OS_MemInit(void);
 extern void OS_SchedulerInit(void);

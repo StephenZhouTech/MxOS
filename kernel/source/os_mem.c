@@ -21,12 +21,12 @@
  *
  * 1 tab == 4 spaces!
  */
-
-#include "os_list.h"
-#include "os_configs.h"
-#include "os_lib.h"
 #include "arch.h"
+#include "os_lib.h"
 #include "os_mem.h"
+#include "os_list.h"
+#include "os_trace.h"
+#include "os_configs.h"
 #include "os_critical.h"
 
 #define OS_MEM_LOCK()                   OS_API_EnterCritical()
@@ -74,9 +74,11 @@ void OS_MemInit(void)
     MmBlockDesc         = (MemBlockDesc_t *)MemZone.StartAddr;
     MmBlockDesc->Size   = MemZone.TotalSize;
     ListAdd(&MmBlockDesc->List, &MemZone.FreeListHead);
+
+    TRACE_MemoryInit(MemZone);
 }
 
-static void _InsertMmBlockDescToFreeList(ListHead_t *InsertList)
+static void OS_InsertMemBlockDescToFreeList(ListHead_t *InsertList)
 {
     ListHead_t     *ListIterator = OS_NULL;
     MemBlockDesc_t *MmBlkDescIterator = OS_NULL;
@@ -136,6 +138,8 @@ void *OS_API_Malloc(OS_Uint32_t WantSize)
                 // Add the allocted memory block to used list
                 ListAdd(&AllocteMmBlkDesc->List, &MemZone.UsedListHead);
 
+                TRACE_Malloc(TP_MALLOC_SUCCESS, AllocteMmBlkDesc, MemZone);
+
                 // Check if the size of this block can be split into two part
                 if ((AllocteMmBlkDesc->Size - OS_RequstSize) > OS_MM_MIN_BLOCK_SZ)
                 {
@@ -144,7 +148,9 @@ void *OS_API_Malloc(OS_Uint32_t WantSize)
 
                     AllocteMmBlkDesc->Size = OS_RequstSize;
 
-                    _InsertMmBlockDescToFreeList(&NewMmBlkDesc->List);
+                    OS_InsertMemBlockDescToFreeList(&NewMmBlkDesc->List);
+
+                    TRACE_Malloc(TP_MALLOC_SUCCESS_SPLIT, NewMmBlkDesc, MemZone);
                 }
                 MemZone.RemainingSize -= AllocteMmBlkDesc->Size;
                 break;
@@ -154,11 +160,13 @@ void *OS_API_Malloc(OS_Uint32_t WantSize)
         if (ListPos == &MemZone.FreeListHead)
         {
             // can not find memory to be allocted
+            TRACE_Malloc(TP_MALLOC_FAILED_NOT_ENOUGH, OS_NULL, MemZone);
         }
     }
     else
     {
         // not enough memory
+        TRACE_Malloc(TP_MALLOC_FAILED_WANT_TOO_LARGE, OS_NULL, MemZone);
     }
 
     OS_MEM_UNLOCK();
@@ -166,7 +174,7 @@ void *OS_API_Malloc(OS_Uint32_t WantSize)
     return pReturnAddr;
 }
 
-static void _MergeMmBlock(ListHead_t *MergetList)
+static void OS_MergeMemBlock(ListHead_t *MergetList)
 {
     ListHead_t     *ListIterator      = OS_NULL;
     MemBlockDesc_t *MmBlkDescIterator = OS_NULL;
@@ -191,17 +199,21 @@ static void _MergeMmBlock(ListHead_t *MergetList)
 
     if (MmBlkDescAddrPost)
     {
+        TRACE_Free(TP_FREE_MERGE_POST, MergeMmBlkDesc, MmBlkDescAddrPost, MemZone);
+
         ListDel(&MmBlkDescAddrPost->List);
         MergeMmBlkDesc->Size   += MmBlkDescAddrPost->Size;
     }
 
     if (MmBlkDescAddrPrev)
     {
+        TRACE_Free(TP_FREE_MERGE_PREV, MergeMmBlkDesc, MmBlkDescAddrPost, MemZone);
+
         ListDel(&MmBlkDescAddrPrev->List);
         MmBlkDescAddrPrev->Size   += MergeMmBlkDesc->Size;
         InsertList = &MmBlkDescAddrPrev->List;
     }
-    _InsertMmBlockDescToFreeList(InsertList);
+    OS_InsertMemBlockDescToFreeList(InsertList);
 }
 
 void OS_API_Free(void *pAddr)
@@ -229,8 +241,10 @@ void OS_API_Free(void *pAddr)
         ListDel(&UsedMmBlkDesc->List);
         // Set status to free
         // Check if it can be merged with other memory block
-        _MergeMmBlock(&UsedMmBlkDesc->List);
+        OS_MergeMemBlock(&UsedMmBlkDesc->List);
     }
+
+    TRACE_Free(TP_FREE_DONE, OS_NULL, OS_NULL, MemZone);
 
     OS_MEM_UNLOCK();
 }
