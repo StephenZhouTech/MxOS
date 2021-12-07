@@ -209,7 +209,7 @@ void OS_TaskAddToSuspendList(OS_TCB_t * TaskCB)
     OS_ASSERT(!OS_CheckTaskInTargetList(TaskCB, OS_SUSPEND_LIST));
 
     ListAdd(&TaskCB->StateList, &Scheduler.SuspendListHead);
-    TaskCB->State = OS_TASK_READY;
+    TaskCB->State = OS_TASK_SUSPEND;
 }
 
 void OS_TaskAddToBlockedList(OS_TCB_t * TaskCB)
