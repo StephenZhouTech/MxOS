@@ -21,57 +21,17 @@
  *
  * 1 tab == 4 spaces!
  */
-#include "arch.h"
-#include "os_time.h"
-#include "os_kernel.h"
-#include "os_printk.h"
-#include "os_critical.h"
 
-extern void OS_MemInit(void);
-extern void OS_SchedulerInit(void);
-extern void OS_CriticalInit(void);
-extern void OS_IdleTaskCreate(void);
-extern void OS_FirstTaskStartup(void);
+/* 
+ * Initial the platform
+ * Just like Console, Clock(PLL), PMU, Wake up source
+ */
+#include "platform.h"
+#include "Log.h"
+#include "led.h"
 
-void OS_API_KernelInit(void)
+void PlatformInit(void)
 {
-    OS_KernelStartPrint();
-
-    /* Initial the critical */
-    OS_CriticalInit();
-
-    /* Initial the memory manager */
-    OS_MemInit();
-
-    /* Initial the task scheduler */
-    OS_SchedulerInit();
-
-    /* Initial the Timestamp value */
-    OS_TimeInit();
-
-    OS_PRINTK_INFO("Kernel Init Finished...");
+    LogInit();
+    BspLedInit();
 }
-
-void OS_API_KernelStart(void)
-{
-    /* Lock */
-    ARCH_InterruptDisable();
-
-    /* Create Idle task */
-    OS_IdleTaskCreate();
-
-    /* Configure the IRQ just like NVIC priority */
-    ARCH_InterruptInit();
-
-    /* Configure the misc just like FPU feature */
-    ARCH_MiscInit();
-
-    /* Configure System Tick for OS heart beat */
-    ARCH_SystemTickInit();
-
-    /* Startup The first task */
-    OS_FirstTaskStartup();
-
-    /* Enable interrupt before start the first task */
-}
-

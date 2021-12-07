@@ -373,7 +373,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F40_41xxx,USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>..\..\cpu\cortex_m4;..\..\components\delay;..\..\components\sys;..\..\components\usart;..\..\libraries\stm32f407_fw_lib\include;.\include;..\..\components\log;..\..\bsp\include;..\..\components\lcd\st7735s;..\..\..\..\arch\arm\cortex_m4;..\..\..\..\kernel\include;..\..\..\..\kernel</IncludePath>
+              <IncludePath>..\..\cpu\cortex_m4;..\..\components\delay;..\..\components\sys;..\..\components\usart;..\..\libraries\stm32f407_fw_lib\include;.\include;..\..\components\log;..\..\bsp\include;..\..\components\lcd\st7735s;..\..\..\..\arch\arm\cortex_m4;..\..\..\..\kernel\include;..\..\..\..\kernel;..\..\..\..\platform</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -681,6 +681,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\kernel\source\os_time.c</FilePath>
             </File>
+            <File>
+              <FileName>os_printk.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\kernel\source\os_printk.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -710,6 +715,16 @@
               <FileName>os_dbg_scheduler.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\debug\os_dbg_scheduler.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Platform</GroupName>
+          <Files>
+            <File>
+              <FileName>platform.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\platform\platform.c</FilePath>
             </File>
           </Files>
         </Group>

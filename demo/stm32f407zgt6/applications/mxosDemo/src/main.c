@@ -9,6 +9,8 @@
 #include "os_scheduler.h"
 #include "os_critical.h"
 #include "os_time.h"
+#include "os_printk.h"
+#include "platform.h"
 
 /* Test Case For OS scheduler */
 #define TC_SCHEDULER_IN_MAIN        0
@@ -84,9 +86,7 @@ extern void MEM_TC_Entry(void);
 
 int main(void)
 {
-    LogInit();
-
-    BspLedInit();
+    PlatformInit();
 
 #if TC_MEM_IN_MAIN
     MEM_TC_Entry();
@@ -97,10 +97,6 @@ int main(void)
 #endif
 
 #if DEMO_SHOW
-    LOG_DEBUG("**********************************************************");
-    LOG_DEBUG("************** MxOS Project Running ....****************");
-    LOG_DEBUG("**********************************************************");
-
     OS_API_KernelInit();
 
     OS_Uint32_t TaskInputParam = 1;

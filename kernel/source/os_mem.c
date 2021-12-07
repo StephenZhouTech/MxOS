@@ -26,6 +26,7 @@
 #include "os_mem.h"
 #include "os_list.h"
 #include "os_trace.h"
+#include "os_printk.h"
 #include "os_configs.h"
 #include "os_critical.h"
 
@@ -74,6 +75,9 @@ void OS_MemInit(void)
     MmBlockDesc         = (MemBlockDesc_t *)MemZone.StartAddr;
     MmBlockDesc->Size   = MemZone.TotalSize;
     ListAdd(&MmBlockDesc->List, &MemZone.FreeListHead);
+
+    OS_PRINTK_INFO("Total memory : 0x%08X Bytes, Address at 0x%08X", MemZone.TotalSize, MemZone.StartAddr);
+    OS_PRINTK_INFO("Memory Mamanger Init finished...");
 
     TRACE_MemoryInit(MemZone);
 }

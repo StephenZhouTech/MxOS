@@ -4,7 +4,10 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/arch/arm/cortex_m4"
+                "${workspaceFolder}/arch/arm/cortex_m4",
+                "${workspaceFolder}/kernel/",
+                "${workspaceFolder}/kernel/include/",
+                "${workspaceFolder}/platform"
             ],
             "defines": [
                 "_DEBUG",

@@ -28,6 +28,7 @@
 #include "os_time.h"
 #include "os_task.h"
 #include "os_trace.h"
+#include "os_printk.h"
 #include "os_configs.h"
 #include "os_critical.h"
 #include "os_scheduler.h"
@@ -104,6 +105,8 @@ OS_Uint32_t OS_API_TaskCreate(TaskInitParameter Param, OS_Uint32_t *TaskHandle)
     *TaskHandle = (OS_Uint32_t)TaskCB;
 
     TRACE_TaskCreate(TaskCB);
+
+    OS_PRINTK_INFO("Create Task Name:[%s], Priority:[%d]", TaskCB->TaskName, TaskCB->Priority);
 
     OS_TASK_UNLOCK();
 

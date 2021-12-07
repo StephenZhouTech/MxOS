@@ -27,6 +27,7 @@
 #include "os_list.h"
 #include "os_types.h"
 #include "os_trace.h"
+#include "os_printk.h"
 #include "os_configs.h"
 #include "os_critical.h"
 #include "os_scheduler.h"
