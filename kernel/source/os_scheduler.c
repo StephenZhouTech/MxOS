@@ -30,7 +30,6 @@
 #include "os_critical.h"
 #include "os_time.h"
 #include "os_scheduler.h"
-#include "os_time.h"
 
 #define OS_SCHEDULER_LOCK()               OS_API_EnterCritical()
 #define OS_SCHEDULER_UNLOCK()             OS_API_ExitCritical()
