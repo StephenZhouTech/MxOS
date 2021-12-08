@@ -90,7 +90,11 @@ typedef enum _OS_TracePointScheduler {
 #endif
 
 #ifndef TRACE_TaskSuspend
-    #define TRACE_TaskSuspend(TaskCB)
+    #define TRACE_TaskSuspend(TaskCB, _Current)
+#endif
+
+#ifndef TRACE_TaskResume
+    #define TRACE_TaskResume(TaskCB)
 #endif
 
 #ifndef TRACE_TaskDelay

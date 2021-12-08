@@ -58,6 +58,8 @@ typedef enum _OS_TaskState {
     OS_TASK_UNKNOWN
 } OS_TaskState_e;
 
+#define OS_TSK_HANDLE_TO_TCB(Handle)            ((OS_TCB_t *)Handle)
+
 OS_Uint32_t OS_API_TaskCreate(TaskInitParameter Param, OS_Uint32_t *TaskHandle);
 OS_Uint32_t OS_API_TaskDelay(OS_Uint32_t TickCnt);
 OS_Uint32_t OS_API_TaskSuspend(OS_Uint32_t TaskHandle);

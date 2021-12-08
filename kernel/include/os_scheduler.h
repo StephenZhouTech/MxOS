@@ -34,6 +34,7 @@ typedef struct _OS_TaskScheduler {
     ListHead_t      DelayListHead;
     OS_Uint32_t     PriorityActive;
     OS_Int16_t      SchedulerSuspendNesting;
+    OS_Uint8_t      ReSchedulePending;
 } OS_TaskScheduler_t;
 
 typedef enum _OS_SchedulerStateList {
@@ -42,6 +43,11 @@ typedef enum _OS_SchedulerStateList {
     OS_SUSPEND_LIST,
     OS_BLOCKED_LIST
 } OS_SchedulerStateList_e;
+
+typedef enum _OS_SchedulerReschPending {
+    NO_RESCH_PENDING = 0,
+    RESCH_PENDING
+} OS_SchedulerReschPending_e;
 
 void OS_API_SchedulerSuspend(void);
 void OS_API_SchedulerResume(void);

@@ -43,6 +43,9 @@ void OS_KernelStartPrint(void)
     OS_PRINTK_INFO("#  ====           == ==   ==    =====        ======     #");
     OS_PRINTK_INFO("#                                                       #");
     OS_PRINTK_INFO("#########################################################");
+    OS_PRINTK_INFO("#");
     OS_PRINTK_INFO("# MxOS V%d.%d Present By StephenZhou", OS_KERNEL_MAJOR_VERSION, OS_KERNEL_MINOR_VERSION);
+    OS_PRINTK_INFO("# https://gitee.com/stephenzhou-tech/mx-os");
+    OS_PRINTK_INFO("#");
     OS_PRINTK_INFO("#########################################################");
 }

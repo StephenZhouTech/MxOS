@@ -46,6 +46,7 @@ SCH_FUNCTION_SPACE OS_TaskScheduler_t Scheduler;
 
 extern OS_TCB_t * volatile CurrentTCB;
 extern OS_TCB_t * volatile SwitchNextTCB;
+void OS_Schedule(void);
 
 SCH_FUNCTION_SPACE void SetPriorityActive(OS_Uint8_t ActiveBit)
 {
@@ -110,11 +111,20 @@ void OS_API_SchedulerSuspend(void)
 void OS_API_SchedulerResume(void)
 {
     OS_SCHEDULER_LOCK();
+
     Scheduler.SchedulerSuspendNesting--;
 
     TRACE_SchedulerResume(Scheduler.SchedulerSuspendNesting);
 
     OS_ASSERT(Scheduler.SchedulerSuspendNesting >= 0);
+
+    if (Scheduler.SchedulerSuspendNesting == 0 &&
+        Scheduler.ReSchedulePending == RESCH_PENDING)
+    {
+        Scheduler.ReSchedulePending = NO_RESCH_PENDING;
+        OS_Schedule();
+    }
+
     OS_SCHEDULER_UNLOCK();
 }
 
@@ -281,6 +291,24 @@ void OS_RemoveTaskFromBlockedList(OS_TCB_t * TaskCB)
     TRACE_RemoveFromTargetList(TP_BLOCKED_LIST, TaskCB);
 }
 
+void OS_RemoveTaskFromUnknownList(OS_TCB_t * TaskCB)
+{
+    OS_ASSERT( (TaskCB->State == OS_TASK_READY)   ||
+               (TaskCB->State == OS_TASK_DELAY)   ||
+               (TaskCB->State == OS_TASK_SUSPEND) ||
+               (TaskCB->State == OS_TASK_BLOCKED)   );
+
+    ListDel(&TaskCB->StateList);
+    if (TaskCB->State == OS_TASK_READY)
+    {
+        if ( ListEmpty(&Scheduler.ReadyListHead[TaskCB->Priority]) )
+        {
+            ClearPriorityActive(TaskCB->Priority);
+        }
+    }
+    TaskCB->State = OS_TASK_UNKNOWN;
+}
+
 void OS_TaskReadyToDelay(OS_TCB_t * TaskCB)
 {
     /* Remove from ready list firstly */
@@ -293,6 +321,22 @@ void OS_TaskDelayToReady(OS_TCB_t * TaskCB)
 {
     /* Remove from delay list firstly */
     OS_RemoveTaskFromDelayList(TaskCB);
+    /* Add it in ready list */
+    OS_AddTaskToReadyList(TaskCB);
+}
+
+void OS_TaskUnknowToSuspend(OS_TCB_t * TaskCB)
+{
+    /* Remove from unknow list firstly */
+    OS_RemoveTaskFromUnknownList(TaskCB);
+    /* Add it in suspend list */
+    OS_AddTaskToSuspendList(TaskCB);
+}
+
+void OS_TaskSuspendToReady(OS_TCB_t * TaskCB)
+{
+    /* Remove from suspend list firstly */
+    OS_RemoveTaskFromSuspendList(TaskCB);
     /* Add it in ready list */
     OS_AddTaskToReadyList(TaskCB);
 }
@@ -334,8 +378,11 @@ void OS_Schedule(void)
     OS_Uint8_t NeedResch = 0;
 
     /* Check if the scheduler is suspend */
-    if (OS_IsSchedulerSuspending() != 0)
-        return ;
+    if (OS_IsSchedulerSuspending())
+    {
+        Scheduler.ReSchedulePending = RESCH_PENDING;
+        return;
+    }
 
     /* Find the highest priority task now */
     SwitchNextTCB = OS_HighestPrioTaskGet();
@@ -407,6 +454,8 @@ void OS_SchedulerInit(void)
     ListHeadInit(&Scheduler.DelayListHead);
 
     Scheduler.SchedulerSuspendNesting = 0;
+    Scheduler.PriorityActive = 0;
+    Scheduler.ReSchedulePending = NO_RESCH_PENDING;
 }
 
 void OS_SystemTickHander(void)
