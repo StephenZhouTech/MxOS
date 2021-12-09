@@ -47,6 +47,7 @@ static OS_Uint32_t OS_IdleTaskHandle = 0;
 extern void OS_Schedule(void);
 extern OS_TCB_t * OS_HighestPrioTaskGet(void);
 extern OS_Int16_t OS_IsSchedulerSuspending(void);
+extern void OS_RemoveTaskFromReadyList(OS_TCB_t * TaskCB);
 extern void OS_AddTaskToReadyList(OS_TCB_t * TaskCB);
 extern void OS_TaskReadyToDelay(OS_TCB_t * TaskCB);
 extern void OS_TaskUnknowToSuspend(OS_TCB_t * TaskCB);
@@ -315,6 +316,107 @@ OS_Uint32_t OS_API_TaskResume(OS_Uint32_t TaskHandle)
     }
 
 OS_API_TaskResume_Exit:
+    OS_TASK_UNLOCK();
+
+    return Ret;
+}
+
+/*
+ * Analysis Context:
+ *------------------|--In ISR --------- [Allowed]-|-higher?
+ * 1. Set Current  -|--Sch Suspending - [Allowed]-|
+ *------------------|--In Thread -------[Allowed]-|-lower?---[re-schedule]
+ *
+ *------------------|--In ISR ----------[Allowed]-|-higher and also higher than current ?---[re-schedule]
+ * 2. Set In Other -|--Sch Suspending - [Allowed]-|-
+ *------------------|--In Thread -------[Allowed]-|-lower?
+ *
+ *------------------|
+ * 3. Task In Ready-|- Update Ready list
+ *------------------|
+ */
+OS_Uint32_t OS_API_TaskPrioritySet(OS_Uint32_t TaskHandle, OS_Uint8_t NewPriority)
+{
+    OS_Uint32_t Ret = OS_SUCCESS;
+    OS_Uint8_t  NeedReSch = 0;
+    OS_TCB_t *TaskCB = OS_TSK_HANDLE_TO_TCB(TaskHandle);
+
+    if (TaskCB == OS_NULL)
+    {
+        return OS_NULL_POINTER;
+    }
+
+    if (NewPriority == TaskCB->Priority)
+    {
+        return OS_SET_SAME_PRIO;
+    }
+
+    if (NewPriority >= OS_MAX_TASK_PRIORITY)
+    {
+        return OS_TASK_PRIO_OUT_OF_RANGE;
+    }
+
+    OS_TASK_LOCK();
+
+    TARCE_TaskPrioritySet(TaskCB, CurrentTCB, NewPriority);
+
+    /* If set current priority */
+    if (TaskCB == CurrentTCB)
+    {
+        /* Set current priority smaller than before */
+        if (NewPriority < CurrentTCB->Priority)
+        {
+            NeedReSch = 1;
+        }
+    }
+    /* Set other task priority */
+    else
+    {
+        /*
+         * Re-Schedule condition:
+         * 1. Priority adjusted higher than before
+         * 2. After priority adjusted, also higher than current
+         * 3. This task should in ready list
+         */
+        if ( (NewPriority > TaskCB->Priority    ) &&
+             (NewPriority > CurrentTCB->Priority) &&
+             (TaskCB->State == OS_TASK_READY    ) )
+        {
+            NeedReSch = 1;
+        }
+    }
+
+    /* Because the priority of ready task stand head list, so update it */
+    if (TaskCB->State == OS_TASK_READY)
+    {
+        OS_RemoveTaskFromReadyList(TaskCB);
+        /* Update priority */
+        TaskCB->Priority = NewPriority;
+        OS_AddTaskToReadyList(TaskCB);
+    }
+    else
+    {
+        /* Update priority */
+        TaskCB->Priority = NewPriority;
+    }
+
+    if (NeedReSch)
+    {
+        OS_Schedule();
+    }
+
+    OS_TASK_UNLOCK();
+
+    return Ret;
+}
+
+OS_Uint8_t OS_API_TaskPriorityGet(OS_Uint32_t TaskHandle)
+{
+    OS_TCB_t *TaskCB = OS_TSK_HANDLE_TO_TCB(TaskHandle);
+    OS_Uint8_t Ret = 0;
+
+    OS_TASK_LOCK();
+    Ret = TaskCB->Priority;
     OS_TASK_UNLOCK();
 
     return Ret;

@@ -116,6 +116,114 @@ void TASK1_FUNC(void *param)
             OS_API_TaskSuspend(task1_handle);
         }
 
+        /* T1 Get priorty */
+        if (t1_cnt == 42)
+        {
+            printf("T1 Get T1/T2/T3 Prio:[%d/%d/%d]\r\n",
+                            OS_API_TaskPriorityGet(task1_handle),
+                            OS_API_TaskPriorityGet(task2_handle),
+                            OS_API_TaskPriorityGet(task3_handle));
+        }
+
+        /* Change T1 priorty to the same as T1 */
+        if (t1_cnt == 45)
+        {
+            Ret = OS_API_TaskPrioritySet(task1_handle, 1);
+            printf("T1 Set T1 Prio to same :[%d]\r\n", Ret);
+        }
+
+        /* Raise T1 priorty to highest */
+        if (t1_cnt == 50)
+        {
+            printf("T1 Set T1 Prio to highest\r\n");
+            Ret = OS_API_TaskPrioritySet(task1_handle, 4);
+        }
+
+        /* T1 Get priorty */
+        if (t1_cnt == 55)
+        {
+            printf("T1 Get T1/T2/T3 Prio:[%d/%d/%d]\r\n",
+                            OS_API_TaskPriorityGet(task1_handle),
+                            OS_API_TaskPriorityGet(task2_handle),
+                            OS_API_TaskPriorityGet(task3_handle));
+        }
+
+        /* Down T1 priorty to highest */
+        if (t1_cnt == 60)
+        {
+            printf("T1 Set T1 Prio to lowset\r\n");
+            Ret = OS_API_TaskPrioritySet(task1_handle, 1);
+        }
+
+        /* T1 Get priorty */
+        if (t1_cnt == 65)
+        {
+            printf("T1 Get T1/T2/T3 Prio:[%d/%d/%d]\r\n",
+                            OS_API_TaskPriorityGet(task1_handle),
+                            OS_API_TaskPriorityGet(task2_handle),
+                            OS_API_TaskPriorityGet(task3_handle));
+        }
+
+        /* Raise T2 priorty to highest */
+        if (t1_cnt == 70)
+        {
+            printf("T1 Set T2 Prio to highest\r\n");
+            OS_API_TaskPrioritySet(task2_handle, 4);
+        }
+
+        /* T1 Get priorty */
+        if (t1_cnt == 75)
+        {
+            printf("T1 Get T1/T2/T3 Prio:[%d/%d/%d]\r\n",
+                            OS_API_TaskPriorityGet(task1_handle),
+                            OS_API_TaskPriorityGet(task2_handle),
+                            OS_API_TaskPriorityGet(task3_handle));
+        }
+
+        /* Down T2 priorty to highest */
+        if (t1_cnt == 80)
+        {
+            printf("T1 Set T2 Prio to before\r\n");
+            Ret = OS_API_TaskPrioritySet(task2_handle, 2);
+        }
+
+        /* T1 Get priorty */
+        if (t1_cnt == 85)
+        {
+            printf("T1 Get T1/T2/T3 Prio:[%d/%d/%d]\r\n",
+                            OS_API_TaskPriorityGet(task1_handle),
+                            OS_API_TaskPriorityGet(task2_handle),
+                            OS_API_TaskPriorityGet(task3_handle));
+        }
+
+        /* Suspend T3 */
+        if (t1_cnt == 87)
+        {
+            printf("T1 Suspend T3\r\n");
+            OS_API_TaskSuspend(task3_handle);
+        }
+
+        /* Set T3 priorty */
+        if (t1_cnt == 90)
+        {
+            printf("T1 Set T3 Prio to 15\r\n");
+            OS_API_TaskPrioritySet(task3_handle, 15);
+        }
+
+        /* T1 Get priorty */
+        if (t1_cnt == 95)
+        {
+            printf("T1 Get T1/T2/T3 Prio:[%d/%d/%d]\r\n",
+                            OS_API_TaskPriorityGet(task1_handle),
+                            OS_API_TaskPriorityGet(task2_handle),
+                            OS_API_TaskPriorityGet(task3_handle));
+        }
+
+        if (t1_cnt == 96)
+        {
+            printf("############## ^_^ ##############\r\n");
+        }
+
         OS_API_TaskDelay(TASK_1_DELAY);
         BspLEDOff(LED_2);
         BspLEDOn(LED_2);

@@ -105,5 +105,9 @@ typedef enum _OS_TracePointScheduler {
     #define TRACE_TaskYield(TaskCB)
 #endif
 
+#ifndef TARCE_TaskPrioritySet
+    #define TARCE_TaskPrioritySet(TaskCB, _Current, Priority)
+#endif
+
 #endif // __MXOS_TRACE_H__
 

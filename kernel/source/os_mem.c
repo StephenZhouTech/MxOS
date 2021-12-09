@@ -165,12 +165,14 @@ void *OS_API_Malloc(OS_Uint32_t WantSize)
         {
             // can not find memory to be allocted
             TRACE_Malloc(TP_MALLOC_FAILED_NOT_ENOUGH, OS_NULL, MemZone);
+            OS_PRINTK_WARNING("Not enough memory in free list for Malloc");
         }
     }
     else
     {
         // not enough memory
         TRACE_Malloc(TP_MALLOC_FAILED_WANT_TOO_LARGE, OS_NULL, MemZone);
+        OS_PRINTK_WARNING("Total memory not enough for Malloc");
     }
 
     OS_MEM_UNLOCK();

@@ -39,6 +39,7 @@ typedef enum _OS_ErrorCode {
     OS_SUSPEND_CUR_TSK_IN_SCH_SUSPEND,
     OS_RESUME_CUR_TSK,
     OS_RESUME_TSK_NOT_IN_SUSPEND,
+    OS_SET_SAME_PRIO,
 } OS_ErrorCode_e;
 
 #define OS_CHECK_RETURN(Ret)                \

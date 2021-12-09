@@ -65,4 +65,7 @@ OS_Uint32_t OS_API_TaskDelay(OS_Uint32_t TickCnt);
 OS_Uint32_t OS_API_TaskSuspend(OS_Uint32_t TaskHandle);
 OS_Uint32_t OS_API_TaskResume(OS_Uint32_t TaskHandle);
 
+OS_Uint32_t OS_API_TaskPrioritySet(OS_Uint32_t TaskHandle, OS_Uint8_t NewPriority);
+OS_Uint8_t OS_API_TaskPriorityGet(OS_Uint32_t TaskHandle);
+
 #endif // __MXOS_TASK_H__
