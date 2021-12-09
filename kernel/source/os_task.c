@@ -34,7 +34,6 @@
 #include "os_scheduler.h"
 #include "os_error_code.h"
 
-#define OS_TASK_MAGIC_NUMBER            0xA5
 #define OS_IDEL_TASK_PRIO               0x00
 
 #define OS_TASK_LOCK()               OS_API_EnterCritical()
@@ -86,6 +85,10 @@ OS_Uint32_t OS_API_TaskCreate(TaskInitParameter Param, OS_Uint32_t *TaskHandle)
         Ret = OS_NOT_ENOUGH_MEM_FOR_TASK_CREATE;
         goto TaskCreateMemNotEnough;
     }
+
+#if CONFIG_STACK_OVERFLOW_CHECK
+    TaskCB->StartOfStack = TaskCB->Stack;
+#endif
 
     // Fill the task stack with magic number in order to check stack overflow
     OS_Memset((void *) TaskCB->Stack, OS_TASK_MAGIC_NUMBER, Param.StackSize);

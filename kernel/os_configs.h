@@ -11,11 +11,14 @@
 /* Memory Mamanger */
 #define CONFIG_TOTAL_HEAP_SIZE                      (32 * OS_SIZE_KB)
 
-/* Task Scheduler */
+/* Task and Scheduler */
 #define CONFIG_TASK_NAME_LEN                        (16 * OS_SIZE_BYTE)
 #define CONFIG_IDLE_TASK_STACK_SIZE                 (512 * OS_SIZE_BYTE)
 #define CONFIG_TICK_COUNT_INIT_VALUE                (0x00000000)
 
+#define CONFIG_STACK_OVERFLOW_CHECK                 1
+
+/* Configure System Tick Rate */
 #define CONFIG_SYS_CLOCK_RATE                       (168 * OS_FREQ_MHZ)
 #define CONFIG_SYS_TICK_RATE_HZ                     (1 * OS_FREQ_KHZ)
 

@@ -373,6 +373,23 @@ void OS_TaskCheckWakeUp(OS_Uint32_t time)
     }
 }
 
+#if CONFIG_STACK_OVERFLOW_CHECK
+
+void OS_CheckStackOverflow(void)
+{
+    OS_Uint32_t *StartOfStack = (OS_Uint32_t *)CurrentTCB->StartOfStack;
+    if ( (StartOfStack[0] != OS_TASK_STACK_BOUNDARY) ||
+         (StartOfStack[1] != OS_TASK_STACK_BOUNDARY) ||
+         (StartOfStack[2] != OS_TASK_STACK_BOUNDARY) ||
+         (StartOfStack[3] != OS_TASK_STACK_BOUNDARY) )
+         {
+             /* Stack overflow occured */
+             while(1);
+         }
+}
+
+#endif
+
 void OS_Schedule(void)
 {
     OS_Uint8_t NeedResch = 0;
@@ -436,6 +453,9 @@ _OS_ScheduleRightNow:
     {
         TRACE_ContextSwitch(CurrentTCB, SwitchNextTCB, OS_GetCurrentTime());
 
+#if CONFIG_STACK_OVERFLOW_CHECK
+        OS_CheckStackOverflow();
+#endif
         ARCH_TriggerContextSwitch((void *)CurrentTCB, (void *)SwitchNextTCB);
     }
 }

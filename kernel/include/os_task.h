@@ -30,11 +30,16 @@
 #include "os_list.h"
 
 #define OS_MAX_TASK_PRIORITY                    32
+#define OS_TASK_MAGIC_NUMBER                    0xA5
+#define OS_TASK_STACK_BOUNDARY                  0xA5A5A5A5
 
 typedef void (*TaskFunction_t)(void *PrivateData);
 
 typedef struct _OS_TaskControlBlock {
     void            *Stack;
+#if CONFIG_STACK_OVERFLOW_CHECK
+    void            *StartOfStack;
+#endif
     OS_Uint8_t      Priority;
     ListHead_t      StateList;
     OS_Uint8_t      State;
