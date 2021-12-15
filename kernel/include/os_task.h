@@ -42,6 +42,7 @@ typedef struct _OS_TaskControlBlock {
 #endif
     OS_Uint8_t      Priority;
     ListHead_t      StateList;
+    ListHead_t      IpcSleepList;
     OS_Uint8_t      State;
     OS_Int8_t       TaskName[CONFIG_TASK_NAME_LEN];
     OS_Uint32_t     WakeUpTime;
@@ -59,7 +60,8 @@ typedef enum _OS_TaskState {
     OS_TASK_READY = 0,
     OS_TASK_DELAY,
     OS_TASK_SUSPEND,
-    OS_TASK_BLOCKED,
+    OS_TASK_ENDLESS_BLOCKED,
+    OS_TASK_TIMEOUT_BLOCKED,
     OS_TASK_UNKNOWN
 } OS_TaskState_e;
 

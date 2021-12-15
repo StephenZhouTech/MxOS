@@ -43,7 +43,8 @@ char *TaskStateString[] =
     "READY_STATE",
     "DELAY_STATE",
     "SUSPEND_STATE",
-    "BLOCKED_STATE",
+    "OS_TASK_ENDLESS_BLOCKED",
+    "OS_TASK_TIMEOUT_BLOCKED",
     "UNKNOWN_STATE"
 };
 
@@ -140,7 +141,7 @@ void OS_DBG_SCH_DumpBlockList(void)
 
     printf("[Dump Block List]:\r\n");
 
-    StateListHead = &Scheduler.BlockListHead;
+    StateListHead = &Scheduler.BlockTimeoutListHead;
 
     if (ListEmpty(StateListHead))
     {

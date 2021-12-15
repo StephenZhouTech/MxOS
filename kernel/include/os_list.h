@@ -191,6 +191,15 @@ static inline int ListIsLast(const ListHead_t *list,
 }
 
 /**
+ * PickListLast - Pick the last element of the list
+ * @head: the head of the list
+ */
+static inline ListHead_t * PickListLast(const ListHead_t *head)
+{
+    return head->prev;
+}
+
+/**
  * ListEmpty - tests whether a list is empty
  * @head: the list to test.
  */

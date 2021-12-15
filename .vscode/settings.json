@@ -12,7 +12,9 @@
         "os_critical.h": "c",
         "os_trace.h": "c",
         "os_list.h": "c",
-        "os_printk.h": "c"
+        "os_printk.h": "c",
+        "os_task.h": "c",
+        "os_sem.h": "c"
     },
     "C_Cpp.errorSquiggles": "Disabled"
 }

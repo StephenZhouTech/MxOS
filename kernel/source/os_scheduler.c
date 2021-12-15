@@ -23,6 +23,7 @@
  */
 
 #include "arch.h"
+#include "os_sem.h"
 #include "os_time.h"
 #include "os_list.h"
 #include "os_types.h"
@@ -46,6 +47,7 @@ SCH_FUNCTION_SPACE OS_TaskScheduler_t Scheduler;
 
 extern OS_TCB_t * volatile CurrentTCB;
 extern OS_TCB_t * volatile SwitchNextTCB;
+
 void OS_Schedule(void);
 
 SCH_FUNCTION_SPACE void SetPriorityActive(OS_Uint8_t ActiveBit)
@@ -155,9 +157,9 @@ OS_Uint8_t OS_CheckTaskInTargetList(OS_TCB_t *TargetTCB, OS_Uint8_t TargetList)
         }
         break;
 
-        case OS_BLOCKED_LIST:
+        case OS_BLOCKED_TIMEOUT_LIST:
         {
-            StateListHead = &Scheduler.BlockListHead;
+            StateListHead = &Scheduler.BlockTimeoutListHead;
         }
         break;
 
@@ -190,21 +192,41 @@ void OS_AddTaskToReadyList(OS_TCB_t * TaskCB)
     TRACE_AddToTargetList(TP_READY_LIST, TaskCB);
 }
 
-void OS_AddTaskToDelayList(OS_TCB_t *TaskCB)
+static void _OS_AddTaskToSortList(OS_TCB_t *TaskCB, OS_Uint8_t TargetList)
 {
     ListHead_t *ListIterator = OS_NULL;
     OS_TCB_t   *TCB_Iterator = OS_NULL;
+    ListHead_t *TargetListHead = OS_NULL;
 
-    OS_ASSERT(TaskCB->State != OS_TASK_DELAY);
-
-    if (ListEmpty(&Scheduler.DelayListHead))
+    switch (TargetList)
     {
-        ListAdd(&TaskCB->StateList, &Scheduler.DelayListHead);
+        case OS_DELAY_LIST:
+        {
+            TargetListHead = &Scheduler.DelayListHead;
+        }
+        break;
+
+        case OS_BLOCKED_TIMEOUT_LIST:
+        {
+            TargetListHead = &Scheduler.BlockTimeoutListHead;
+        }
+        break;
+
+        default :
+        {
+            TargetListHead = &Scheduler.DelayListHead;
+        }
+        break;
+    }
+
+    if (ListEmpty(TargetListHead))
+    {
+        ListAdd(&TaskCB->StateList, TargetListHead);
     }
     else
     {
         // Insert in the delay list with sort
-        ListForEach(ListIterator, &Scheduler.DelayListHead)
+        ListForEach(ListIterator, TargetListHead)
         {
             TCB_Iterator = ListEntry(ListIterator, OS_TCB_t, StateList);
             // If TCB_Iterator->WakeUpTime after TargetTCB->WakeUpTime
@@ -213,18 +235,37 @@ void OS_AddTaskToDelayList(OS_TCB_t *TaskCB)
         }
 
         // Do not find position
-        if (ListIterator == &Scheduler.DelayListHead)
+        if (ListIterator == TargetListHead)
         {
-            ListAddTail(&TaskCB->StateList, &Scheduler.DelayListHead);
+            ListAddTail(&TaskCB->StateList, TargetListHead);
         }
         else
         {
             ListAdd(&TaskCB->StateList, TCB_Iterator->StateList.prev);
         }
     }
+}
+
+void OS_AddTaskToDelayList(OS_TCB_t *TaskCB)
+{
+    OS_ASSERT(TaskCB->State != OS_TASK_DELAY);
+
+    _OS_AddTaskToSortList(TaskCB, OS_DELAY_LIST);
+
     TaskCB->State = OS_TASK_DELAY;
 
     TRACE_AddToTargetList(TP_DELAY_LIST, TaskCB);
+}
+
+void OS_AddTaskToBlockedTimeOutList(OS_TCB_t * TaskCB)
+{
+    OS_ASSERT(TaskCB->State != OS_TASK_TIMEOUT_BLOCKED);
+
+    _OS_AddTaskToSortList(TaskCB, OS_BLOCKED_TIMEOUT_LIST);
+
+    TaskCB->State = OS_TASK_TIMEOUT_BLOCKED;
+
+    TRACE_AddToTargetList(OS_TASK_TIMEOUT_BLOCKED, TaskCB);
 }
 
 void OS_AddTaskToSuspendList(OS_TCB_t * TaskCB)
@@ -235,16 +276,6 @@ void OS_AddTaskToSuspendList(OS_TCB_t * TaskCB)
     TaskCB->State = OS_TASK_SUSPEND;
 
     TRACE_AddToTargetList(TP_SUSPEND_LIST, TaskCB);
-}
-
-void OS_AddTaskToBlockedList(OS_TCB_t * TaskCB)
-{
-    OS_ASSERT(TaskCB->State != OS_TASK_BLOCKED);
-
-    ListAdd(&TaskCB->StateList, &Scheduler.BlockListHead);
-    TaskCB->State = OS_TASK_BLOCKED;
-
-    TRACE_AddToTargetList(TP_BLOCKED_LIST, TaskCB);
 }
 
 void OS_RemoveTaskFromReadyList(OS_TCB_t * TaskCB)
@@ -283,9 +314,12 @@ void OS_RemoveTaskFromSuspendList(OS_TCB_t * TaskCB)
 
 void OS_RemoveTaskFromBlockedList(OS_TCB_t * TaskCB)
 {
-    OS_ASSERT(TaskCB->State == OS_TASK_BLOCKED);
+    if (TaskCB->State == OS_TASK_TIMEOUT_BLOCKED)
+    {
+        ListDel(&TaskCB->StateList);
+    }
+    ListDel(&TaskCB->IpcSleepList);
 
-    ListDel(&TaskCB->StateList);
     TaskCB->State = OS_TASK_UNKNOWN;
 
     TRACE_RemoveFromTargetList(TP_BLOCKED_LIST, TaskCB);
@@ -293,12 +327,16 @@ void OS_RemoveTaskFromBlockedList(OS_TCB_t * TaskCB)
 
 void OS_RemoveTaskFromUnknownList(OS_TCB_t * TaskCB)
 {
-    OS_ASSERT( (TaskCB->State == OS_TASK_READY)   ||
-               (TaskCB->State == OS_TASK_DELAY)   ||
-               (TaskCB->State == OS_TASK_SUSPEND) ||
-               (TaskCB->State == OS_TASK_BLOCKED)   );
+    if ( (TaskCB->State == OS_TASK_ENDLESS_BLOCKED) || (TaskCB->State == OS_TASK_TIMEOUT_BLOCKED) )
+    {
+        ListDel(&TaskCB->IpcSleepList);
+    }
 
-    ListDel(&TaskCB->StateList);
+    if (TaskCB->State != OS_TASK_ENDLESS_BLOCKED)
+    {
+        ListDel(&TaskCB->StateList);
+    }
+
     if (TaskCB->State == OS_TASK_READY)
     {
         if ( ListEmpty(&Scheduler.ReadyListHead[TaskCB->Priority]) )
@@ -341,7 +379,34 @@ void OS_TaskSuspendToReady(OS_TCB_t * TaskCB)
     OS_AddTaskToReadyList(TaskCB);
 }
 
-void OS_TaskCheckWakeUp(OS_Uint32_t time)
+void OS_TaskReadyToBlock(OS_TCB_t * TaskCB, ListHead_t *SleepHead, OS_Uint8_t BlockType)
+{
+    /* Remove from ready list firstly, Note, only current tcb should as input */
+    OS_RemoveTaskFromReadyList(TaskCB);
+
+    /* Pend on the target sleep list head */
+    ListAdd(&TaskCB->IpcSleepList, SleepHead);
+
+    if (BlockType == OS_BLOCK_TYPE_ENDLESS)
+    {
+        TaskCB->State = OS_TASK_ENDLESS_BLOCKED;
+    }
+    else
+    {
+        OS_AddTaskToBlockedTimeOutList(TaskCB);
+    }
+}
+
+void OS_TaskBlockToReady(OS_TCB_t * TaskCB)
+{
+    /* Remove from block list */
+    OS_RemoveTaskFromBlockedList(TaskCB);
+
+    /* Add it in ready list */
+    OS_AddTaskToReadyList(TaskCB);
+}
+
+void OS_TaskCheckDelayWakeup(OS_Uint32_t time)
 {
     ListHead_t *ListIterator = OS_NULL;
     ListHead_t *ListIterator_prev = OS_NULL;
@@ -371,6 +436,46 @@ void OS_TaskCheckWakeUp(OS_Uint32_t time)
             break;
         }
     }
+}
+
+void OS_TaskCheckBlockWakeup(OS_Uint32_t time)
+{
+    ListHead_t *ListIterator = OS_NULL;
+    ListHead_t *ListIterator_prev = OS_NULL;
+    OS_TCB_t   *TCB_Iterator = OS_NULL;
+
+    if (ListEmpty(&Scheduler.BlockTimeoutListHead))
+    {
+        return;
+    }
+
+    // Find out the task which should be wake up
+    ListForEach(ListIterator, &Scheduler.BlockTimeoutListHead)
+    {
+        TCB_Iterator = ListEntry(ListIterator, OS_TCB_t, StateList);
+        // Check if the task is timeout
+        if (OS_TIME_AFTER_EQ(time, TCB_Iterator->WakeUpTime))
+        {
+            TRACE_TaskBlockTimeout(TCB_Iterator);
+
+            OS_PRINTK_DEBUG("BlockTask[%s] Wakeup Timeout:[%d] ", TCB_Iterator->TaskName, time);
+
+            ListIterator_prev = ListIterator->prev;
+            OS_TaskBlockToReady(TCB_Iterator);
+            // Current ListIterator will link to ready list, relocate the pointer
+            ListIterator = ListIterator_prev;
+        }
+        else
+        {
+            break;
+        }
+    }
+}
+
+void OS_TaskCheckWakeup(OS_Uint32_t time)
+{
+    OS_TaskCheckDelayWakeup(time);
+    OS_TaskCheckBlockWakeup(time);
 }
 
 #if CONFIG_STACK_OVERFLOW_CHECK
@@ -469,7 +574,7 @@ void OS_SchedulerInit(void)
     {
         ListHeadInit(&Scheduler.ReadyListHead[i]);
     }
-    ListHeadInit(&Scheduler.BlockListHead);
+    ListHeadInit(&Scheduler.BlockTimeoutListHead);
     ListHeadInit(&Scheduler.SuspendListHead);
     ListHeadInit(&Scheduler.DelayListHead);
 
@@ -480,6 +585,8 @@ void OS_SchedulerInit(void)
 
 void OS_SystemTickHander(void)
 {
+    OS_Uint32_t CurrentTime = 0;
+
     OS_SCHEDULER_LOCK();
 
     /* Check if the scheduler is active */
@@ -489,9 +596,11 @@ void OS_SystemTickHander(void)
     /* Increment of System Tick */
     OS_IncrementTime();
 
-    TRACE_IncrementTick(OS_GetCurrentTime());
+    CurrentTime = OS_GetCurrentTime();
 
-    OS_TaskCheckWakeUp(OS_GetCurrentTime());
+    TRACE_IncrementTick(CurrentTime);
+
+    OS_TaskCheckWakeup(CurrentTime);
 
     /* Schedule */
     OS_Schedule();

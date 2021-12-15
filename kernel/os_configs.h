@@ -39,6 +39,9 @@
 #define OS_PRINTK_DEBUG_LEVEL                       0
 
 #define OS_USE_PRINTK                               1
-#define OS_PRINTK_LEVEL                             (OS_PRINTK_INFO_LEVEL)
+#define OS_PRINTK_LEVEL                             (OS_PRINTK_DEBUG_LEVEL)
+
+/* OS Sempaphore configures */
+#define OS_MAX_SEM_DEFINE                           10
 
 #endif // !__MXOS_CONFIG_H__

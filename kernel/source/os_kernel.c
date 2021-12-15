@@ -32,6 +32,7 @@ extern void OS_SchedulerInit(void);
 extern void OS_CriticalInit(void);
 extern void OS_IdleTaskCreate(void);
 extern void OS_FirstTaskStartup(void);
+extern void OS_SemaphoreInit(void);
 
 void OS_API_KernelInit(void)
 {
@@ -48,6 +49,9 @@ void OS_API_KernelInit(void)
 
     /* Initial the Timestamp value */
     OS_TimeInit();
+
+    /* Ininial the semaphore */
+    OS_SemaphoreInit();
 
     OS_PRINTK_INFO("Kernel Init Finished...");
 }

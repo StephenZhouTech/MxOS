@@ -108,6 +108,8 @@ OS_Uint32_t OS_API_TaskCreate(TaskInitParameter Param, OS_Uint32_t *TaskHandle)
 
     TaskCB->WakeUpTime = OS_TIME_MAX;
 
+    ListHeadInit(&TaskCB->IpcSleepList);
+
     *TaskHandle = (OS_Uint32_t)TaskCB;
 
     TRACE_TaskCreate(TaskCB);

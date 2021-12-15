@@ -72,6 +72,10 @@ typedef enum _OS_TracePointScheduler {
     #define TRACE_TaskDelayTimeout(TaskCB)
 #endif
 
+#ifndef TRACE_TaskBlockTimeout
+    #define TRACE_TaskBlockTimeout(TaskCB)
+#endif
+
 #ifndef TRACE_ContextSwitch
     #define TRACE_ContextSwitch(_Current, _Next, Timestamp)
 #endif

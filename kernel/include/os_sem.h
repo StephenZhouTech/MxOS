@@ -21,41 +21,28 @@
  *
  * 1 tab == 4 spaces!
  */
+#include "os_types.h"
+#include "os_list.h"
 
-#ifndef __MXOS_SCHEDULER_H__
-#define __MXOS_SCHEDULER_H__
+typedef struct _OS_Sem {
+    ListHead_t List;
+    OS_Uint32_t Count;
+    OS_Uint8_t Used;
+} OS_Sem_t;
 
-#include "os_task.h"
+typedef enum _OS_SemUsed {
+    OS_SEM_UNUSED = 0,
+    OS_SEM_USED
+} OS_SemUsed_e;
 
-typedef struct _OS_TaskScheduler {
-    ListHead_t      ReadyListHead[OS_MAX_TASK_PRIORITY];
-    ListHead_t      BlockTimeoutListHead;
-    ListHead_t      SuspendListHead;
-    ListHead_t      DelayListHead;
-    OS_Uint32_t     PriorityActive;
-    OS_Int16_t      SchedulerSuspendNesting;
-    OS_Uint8_t      ReSchedulePending;
-} OS_TaskScheduler_t;
+OS_Uint32_t OS_API_SemCreate(OS_Uint32_t *SemHandle, OS_Uint32_t Count);
 
-typedef enum _OS_SchedulerStateList {
-    OS_READY_LIST = 0,
-    OS_DELAY_LIST,
-    OS_SUSPEND_LIST,
-    OS_BLOCKED_TIMEOUT_LIST
-} OS_SchedulerStateList_e;
+OS_Uint32_t OS_API_SemWait(OS_Uint32_t SemHandle);
 
-typedef enum _OS_BlockType {
-    OS_BLOCK_TYPE_ENDLESS = 0,
-    OS_BLOCK_TYPE_TIMEOUT
-} OS_BlockType_e;
+OS_Uint32_t OS_API_SemWaitTimeout(OS_Uint32_t SemHandle, OS_Uint32_t Timeout);
 
-typedef enum _OS_SchedulerReschPending {
-    NO_RESCH_PENDING = 0,
-    RESCH_PENDING
-} OS_SchedulerReschPending_e;
+OS_Uint32_t OS_API_SemTryWait(OS_Uint32_t SemHandle);
 
-void OS_API_SchedulerSuspend(void);
-void OS_API_SchedulerResume(void);
-void OS_SystemTickHander(void);
+OS_Uint32_t OS_API_SemPost(OS_Uint32_t SemHandle);
 
-#endif // __MXOS_SCHEDULER_H__
+OS_Uint32_t OS_API_SemDestory(OS_Uint32_t SemHandle);
