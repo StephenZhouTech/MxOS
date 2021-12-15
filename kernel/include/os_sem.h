@@ -36,13 +36,18 @@ typedef enum _OS_SemUsed {
 } OS_SemUsed_e;
 
 OS_Uint32_t OS_API_SemCreate(OS_Uint32_t *SemHandle, OS_Uint32_t Count);
+OS_Uint32_t OS_API_BinarySemCreate(OS_Uint32_t *SemHandle, OS_Uint32_t Count);
 
 OS_Uint32_t OS_API_SemWait(OS_Uint32_t SemHandle);
+OS_Uint32_t OS_API_BinarySemWait(OS_Uint32_t SemHandle);
 
 OS_Uint32_t OS_API_SemWaitTimeout(OS_Uint32_t SemHandle, OS_Uint32_t Timeout);
+OS_Uint32_t OS_API_BinarySemWaitTimeout(OS_Uint32_t SemHandle, OS_Uint32_t Timeout);
 
 OS_Uint32_t OS_API_SemTryWait(OS_Uint32_t SemHandle);
+OS_Uint32_t OS_API_BinarySemTryWait(OS_Uint32_t SemHandle);
 
 OS_Uint32_t OS_API_SemPost(OS_Uint32_t SemHandle);
+OS_Uint32_t OS_API_BinarySemPost(OS_Uint32_t SemHandle);
 
 OS_Uint32_t OS_API_SemDestory(OS_Uint32_t SemHandle);

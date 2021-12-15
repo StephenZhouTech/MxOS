@@ -33,6 +33,7 @@
 #include "os_error_code.h"
 
 #define OS_SEM_MAX_COUNT                            0xFFFE
+#define OS_BINARY_SEM_MAX_COUNT                     1
 
 #define OS_SEM_LOCK()                               OS_API_EnterCritical()
 #define OS_SEM_UNLOCK()                             OS_API_ExitCritical()
@@ -98,7 +99,7 @@ OS_Uint32_t OS_GetSemResource(OS_Uint32_t *SemHandle)
     return OS_SUCCESS;
 }
 
-OS_Uint32_t OS_API_SemCreate(OS_Uint32_t *SemHandle, OS_Uint32_t Count)
+static OS_Uint32_t OS_SemCreate(OS_Uint32_t *SemHandle, OS_Uint32_t Count)
 {
     OS_Uint32_t Ret = OS_SUCCESS;
 
@@ -123,6 +124,22 @@ OS_API_SemCreate_Exit:
     OS_SEM_UNLOCK();
 
     return Ret;
+}
+
+OS_Uint32_t OS_API_SemCreate(OS_Uint32_t *SemHandle, OS_Uint32_t Count)
+{
+    if (Count > OS_SEM_MAX_COUNT)
+        return OS_SEM_OVERFLOW;
+
+    return OS_SemCreate(SemHandle, Count);
+}
+
+OS_Uint32_t OS_API_BinarySemCreate(OS_Uint32_t *SemHandle, OS_Uint32_t Count)
+{
+    if (Count > OS_BINARY_SEM_MAX_COUNT)
+        return OS_SEM_OVERFLOW;
+
+    return OS_SemCreate(SemHandle, Count);
 }
 
 static OS_Uint32_t OS_SemWait(OS_Uint32_t SemHandle, OS_Uint8_t BlockType,
@@ -194,6 +211,11 @@ OS_Uint32_t OS_API_SemWait(OS_Uint32_t SemHandle)
     return OS_SemWait(SemHandle, OS_BLOCK_TYPE_ENDLESS, 0xFF);
 }
 
+OS_Uint32_t OS_API_BinarySemWait(OS_Uint32_t SemHandle)
+{
+    return OS_API_SemWait(SemHandle);
+}
+
 OS_Uint32_t OS_API_SemWaitTimeout(OS_Uint32_t SemHandle, OS_Uint32_t Timeout)
 {
     if (Timeout >= OS_TSK_DLY_MAX)
@@ -204,12 +226,22 @@ OS_Uint32_t OS_API_SemWaitTimeout(OS_Uint32_t SemHandle, OS_Uint32_t Timeout)
     return OS_SemWait(SemHandle, OS_BLOCK_TYPE_TIMEOUT, Timeout);
 }
 
+OS_Uint32_t OS_API_BinarySemWaitTimeout(OS_Uint32_t SemHandle, OS_Uint32_t Timeout)
+{
+    return OS_API_SemWaitTimeout(SemHandle, Timeout);
+}
+
 OS_Uint32_t OS_API_SemTryWait(OS_Uint32_t SemHandle)
 {
     return OS_SemWait(SemHandle, OS_BLOCK_TYPE_TIMEOUT, 0x00);
 }
 
-OS_Uint32_t OS_API_SemPost(OS_Uint32_t SemHandle)
+OS_Uint32_t OS_API_BinarySemTryWait(OS_Uint32_t SemHandle)
+{
+    return OS_API_SemTryWait(SemHandle);
+}
+
+static OS_Uint32_t OS_SemPost(OS_Uint32_t SemHandle, OS_Uint32_t MaxCount)
 {
     OS_Uint32_t Ret = OS_SUCCESS;
     OS_Sem_t *Sem = OS_NULL;
@@ -223,7 +255,7 @@ OS_Uint32_t OS_API_SemPost(OS_Uint32_t SemHandle)
 
     Sem = OS_SEM_HANDLE_TO_POINTER(SemHandle);
 
-    if (Sem->Count >= OS_SEM_MAX_COUNT)
+    if (Sem->Count >= MaxCount)
     {
         Ret = OS_SEM_OVERFLOW;
         goto OS_API_SemPost_Exit;
@@ -248,6 +280,16 @@ OS_API_SemPost_Exit:
     OS_SEM_UNLOCK();
 
     return Ret;
+}
+
+OS_Uint32_t OS_API_SemPost(OS_Uint32_t SemHandle)
+{
+    return OS_SemPost(SemHandle, OS_SEM_MAX_COUNT);
+}
+
+OS_Uint32_t OS_API_BinarySemPost(OS_Uint32_t SemHandle)
+{
+    return OS_SemPost(SemHandle, OS_BINARY_SEM_MAX_COUNT);
 }
 
 OS_Uint32_t OS_API_SemDestory(OS_Uint32_t SemHandle)
