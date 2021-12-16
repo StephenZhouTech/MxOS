@@ -21,6 +21,10 @@
  *
  * 1 tab == 4 spaces!
  */
+
+#ifndef __MXOS_SEM_H__
+#define __MXOS_SEM_H__
+
 #include "os_types.h"
 #include "os_list.h"
 
@@ -51,3 +55,5 @@ OS_Uint32_t OS_API_SemPost(OS_Uint32_t SemHandle);
 OS_Uint32_t OS_API_BinarySemPost(OS_Uint32_t SemHandle);
 
 OS_Uint32_t OS_API_SemDestory(OS_Uint32_t SemHandle);
+
+#endif // __MXOS_SEM_H__
