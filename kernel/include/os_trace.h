@@ -113,5 +113,47 @@ typedef enum _OS_TracePointScheduler {
     #define TARCE_TaskPrioritySet(TaskCB, _Current, Priority)
 #endif
 
+/**************************** Trace For Semaphore ****************************/
+#ifndef TARCE_SemCreate
+    #define TARCE_SemCreate(SemHandle, Count)
+#endif
+
+#ifndef TARCE_SemWaitEntry
+    #define TARCE_SemWaitEntry(Sem)
+#endif
+
+#ifndef TARCE_SemWaitSleep
+    #define TARCE_SemWaitSleep(TaskCB, Sem, BlockType)
+#endif
+
+#ifndef TARCE_SemWakeup
+    #define TARCE_SemWakeup(TaskCB)
+#endif
+
+#ifndef TARCE_SemDestory
+    #define TARCE_SemDestory(TaskCB)
+#endif
+
+/**************************** Trace For Mutex ****************************/
+#ifndef TARCE_MutexCreate
+    #define TARCE_MutexCreate(MutexHandle)
+#endif
+
+#ifndef TARCE_MutexSleep
+    #define TARCE_MutexSleep(TaskCB, Mutex, BlockType)
+#endif
+
+#ifndef TARCE_MutexLock
+    #define TARCE_MutexLock(TaskCB)
+#endif
+
+#ifndef TARCE_MutexUnLock
+    #define TARCE_MutexUnLock(TaskCB)
+#endif
+
+#ifndef TARCE_MutexWakeup
+    #define TARCE_MutexWakeup(TaskCB, Mutex)
+#endif
+
 #endif // __MXOS_TRACE_H__
 

@@ -48,12 +48,29 @@ typedef enum _OS_ErrorCode {
     OS_SEM_HANDLE_INVALID,
     OS_SEM_TRY_WAIT_FAILED,
     OS_SEM_OVERFLOW,
+    OS_MUTEX_HANDLE_INVALID,
+    OS_MUTEX_NOT_BEEN_CREATED,
+    OS_NOT_ENOUGH_MUTEX_RESOURCE,
+    OS_USE_MUTEX_IN_INTR_CONTEXT,
+    OS_USE_MUTEX_IN_SCH_SUSPEND,
+    OS_TRY_MUTEX_LOCK_FAILED,
+    OS_MUTEX_INVALID_TIMEOUT,
+    OS_MUTEX_UNLOCK_INVALID,
+    OS_MUTEX_UNLOCK_NOT_OWNER,
+    OS_MUTEX_DESTORY_IN_NO_EMPTY,
+    OS_MUTEX_DESTORY_IN_OWNER_USING,
 } OS_ErrorCode_e;
 
 #define OS_CHECK_RETURN(Ret)                \
 {                                           \
     if(Ret != OS_SUCCESS)                   \
         return Ret;                         \
+}
+
+#define OS_CHECK_NULL_POINTER(Pointer)      \
+{                                           \
+    if (Pointer == OS_NULL)                 \
+        return OS_NULL_POINTER;             \
 }
 
 #endif // __MXOS_ERROR_CODE_H__

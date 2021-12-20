@@ -44,4 +44,7 @@
 /* OS Sempaphore configures */
 #define OS_MAX_SEM_DEFINE                           10
 
+/* OS Mutex configures */
+#define OS_MAX_MUTEX_DEFINE                         10
+
 #endif // !__MXOS_CONFIG_H__

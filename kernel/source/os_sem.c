@@ -26,6 +26,7 @@
 #include "os_task.h"
 #include "os_time.h"
 #include "os_list.h"
+#include "os_trace.h"
 #include "os_printk.h"
 #include "os_critical.h"
 #include "os_configs.h"
@@ -60,7 +61,7 @@ OS_Sem_t OS_SemPool[OS_MAX_SEM_DEFINE];
 
 extern OS_TCB_t * volatile CurrentTCB;
 
-extern void OS_TaskReadyToBlock(OS_TCB_t * TaskCB, ListHead_t *SleepHead, OS_Uint8_t BlockType);
+extern void OS_TaskReadyToBlock(OS_TCB_t * TaskCB, ListHead_t *SleepHead, OS_Uint8_t BlockType, OS_Uint8_t SortType);
 extern OS_Int16_t OS_IsSchedulerSuspending(void);
 extern void OS_Schedule(void);
 extern void OS_TaskBlockToReady(OS_TCB_t * TaskCB);
@@ -112,15 +113,15 @@ static OS_Uint32_t OS_SemCreate(OS_Uint32_t *SemHandle, OS_Uint32_t Count)
 
     Ret = OS_GetSemResource(SemHandle);
     if (Ret != OS_SUCCESS)
-        goto OS_API_SemCreate_Exit;
+        goto OS_SemCreate_Exit;
 
     OS_SemPool[*SemHandle].Used = OS_SEM_USED;
     OS_SemPool[*SemHandle].Count = Count;
     ListHeadInit(&OS_SemPool[*SemHandle].List);
 
-    OS_PRINTK_DEBUG("SemCreate SemId[%d] Count = %d", *SemHandle, Count);
+    TARCE_SemCreate(SemHandle, Count);
 
-OS_API_SemCreate_Exit:
+OS_SemCreate_Exit:
     OS_SEM_UNLOCK();
 
     return Ret;
@@ -168,33 +169,26 @@ static OS_Uint32_t OS_SemWait(OS_Uint32_t SemHandle, OS_Uint8_t BlockType,
         goto OS_SemWait_Exit;
     }
 
+    TARCE_SemWaitEntry(Sem);
+
     if (Sem->Count > 0)
     {
         Sem->Count--;
-        OS_PRINTK_DEBUG("SemWait Task[%s] Count = %d", TaskCB->TaskName, Sem->Count);
     }
     else
     {
         if (Timeout == 0)
         {
-            OS_PRINTK_DEBUG("SemTryWait Task[%s] Failed", TaskCB->TaskName);
             Ret = OS_SEM_TRY_WAIT_FAILED;
             goto OS_SemWait_Exit;
         }
         else
         {
-            if (BlockType == OS_BLOCK_TYPE_TIMEOUT)
-            {
-                OS_PRINTK_DEBUG("SemWait Task[%s] Sleep Timeout = %d", TaskCB->TaskName, Timeout);
-            }
-            else
-            {
-                OS_PRINTK_DEBUG("SemWait Task[%s] Sleep Endless", TaskCB->TaskName);
-            }
+            TaskCB->WakeUpTime = OS_GetCurrentTime() + Timeout;
 
-            CurrentTCB->WakeUpTime = OS_GetCurrentTime() + Timeout;
+            TARCE_SemWaitSleep(TaskCB, Sem, BlockType);
 
-            OS_TaskReadyToBlock(TaskCB, &Sem->List, BlockType);
+            OS_TaskReadyToBlock(TaskCB, &Sem->List, BlockType, OS_BLOCK_SORT_FIFO);
 
             OS_Schedule();
         }
@@ -266,7 +260,9 @@ static OS_Uint32_t OS_SemPost(OS_Uint32_t SemHandle, OS_Uint32_t MaxCount)
         // Pick the last one of sleep list because we use FIFO algorithm
         IpcSleepList = PickListLast(&Sem->List);
         TaskCB = ListEntry(IpcSleepList, OS_TCB_t, IpcSleepList);
-        OS_PRINTK_DEBUG("SemPost Task[%s] Wakeup", TaskCB->TaskName);
+
+        TARCE_SemWakeup(TaskCB);
+
         OS_TaskBlockToReady(TaskCB);
 
         OS_Schedule();
@@ -311,7 +307,9 @@ OS_Uint32_t OS_API_SemDestory(OS_Uint32_t SemHandle)
     {
         ListIterator = Sem->List.next;
         TCB_Iterator = ListEntry(ListIterator, OS_TCB_t, IpcSleepList);
-        OS_PRINTK_DEBUG("SemDestory Task[%s] Wakeup", TCB_Iterator->TaskName);
+
+        TARCE_SemDestory(TCB_Iterator);
+
         OS_TaskBlockToReady(TCB_Iterator);
     }
 

@@ -33,6 +33,7 @@ extern void OS_CriticalInit(void);
 extern void OS_IdleTaskCreate(void);
 extern void OS_FirstTaskStartup(void);
 extern void OS_SemaphoreInit(void);
+extern void OS_MutexInit(void);
 
 void OS_API_KernelInit(void)
 {
@@ -52,6 +53,9 @@ void OS_API_KernelInit(void)
 
     /* Ininial the semaphore */
     OS_SemaphoreInit();
+
+    /* Initial the Mutex */
+    OS_MutexInit();
 
     OS_PRINTK_INFO("Kernel Init Finished...");
 }

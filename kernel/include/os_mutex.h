@@ -22,45 +22,36 @@
  * 1 tab == 4 spaces!
  */
 
-#ifndef __MXOS_SCHEDULER_H__
-#define __MXOS_SCHEDULER_H__
+#ifndef __MXOS_MUTEX_H__
+#define __MXOS_MUTEX_H__
 
+#include "os_types.h"
+#include "os_list.h"
 #include "os_task.h"
 
-typedef struct _OS_TaskScheduler {
-    ListHead_t      ReadyListHead[OS_MAX_TASK_PRIORITY];
-    ListHead_t      BlockTimeoutListHead;
-    ListHead_t      SuspendListHead;
-    ListHead_t      DelayListHead;
-    OS_Uint32_t     PriorityActive;
-    OS_Int16_t      SchedulerSuspendNesting;
-    OS_Uint8_t      ReSchedulePending;
-} OS_TaskScheduler_t;
+typedef struct _OS_Mutex {
+    ListHead_t  SleepList;
+    OS_TCB_t    *Owner;
+    OS_Uint32_t OwnerHoldCount;
+    OS_Uint8_t  OwnerPriority;
+    OS_Uint8_t  Used;
+} OS_Mutex_t;
 
-typedef enum _OS_SchedulerStateList {
-    OS_READY_LIST = 0,
-    OS_DELAY_LIST,
-    OS_SUSPEND_LIST,
-    OS_BLOCKED_TIMEOUT_LIST
-} OS_SchedulerStateList_e;
+typedef enum _OS_MutexUsed {
+    OS_MUTEX_UNUSED = 0,
+    OS_MUTEX_USED
+} OS_MutexUsed_e;
 
-typedef enum _OS_BlockType {
-    OS_BLOCK_TYPE_ENDLESS = 0,
-    OS_BLOCK_TYPE_TIMEOUT
-} OS_BlockType_e;
+OS_Uint32_t OS_API_MutexCreate(OS_Uint32_t *MutexHandle);
 
-typedef enum _OS_BlockSortType {
-    OS_BLOCK_SORT_FIFO = 0,
-    OS_BLOCK_SORT_TASK_PRIO
-} OS_BlockSortType_e;
+OS_Uint32_t OS_API_MutexLock(OS_Uint32_t MutexHandle);
 
-typedef enum _OS_SchedulerReschPending {
-    NO_RESCH_PENDING = 0,
-    RESCH_PENDING
-} OS_SchedulerReschPending_e;
+OS_Uint32_t OS_API_MutexLockTimeout(OS_Uint32_t MutexHandle, OS_Uint32_t Timeout);
 
-void OS_API_SchedulerSuspend(void);
-void OS_API_SchedulerResume(void);
-void OS_SystemTickHander(void);
+OS_Uint32_t OS_API_MutexTryLock(OS_Uint32_t MutexHandle);
 
-#endif // __MXOS_SCHEDULER_H__
+OS_Uint32_t OS_API_MutexUnlock(OS_Uint32_t MutexHandle);
+
+OS_Uint32_t OS_API_MutexDestory(OS_Uint32_t MutexHandle);
+
+#endif // __MXOS_MUTEX_H__

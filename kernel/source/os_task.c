@@ -51,6 +51,7 @@ extern void OS_AddTaskToReadyList(OS_TCB_t * TaskCB);
 extern void OS_TaskReadyToDelay(OS_TCB_t * TaskCB);
 extern void OS_TaskUnknowToSuspend(OS_TCB_t * TaskCB);
 extern void OS_TaskSuspendToReady(OS_TCB_t * TaskCB);
+extern void OS_TaskChangePriority(OS_TCB_t * TaskCB, OS_Uint8_t NewPriority);
 
 OS_Uint32_t OS_API_TaskCreate(TaskInitParameter Param, OS_Uint32_t *TaskHandle)
 {
@@ -392,18 +393,7 @@ OS_Uint32_t OS_API_TaskPrioritySet(OS_Uint32_t TaskHandle, OS_Uint8_t NewPriorit
     }
 
     /* Because the priority of ready task stand head list, so update it */
-    if (TaskCB->State == OS_TASK_READY)
-    {
-        OS_RemoveTaskFromReadyList(TaskCB);
-        /* Update priority */
-        TaskCB->Priority = NewPriority;
-        OS_AddTaskToReadyList(TaskCB);
-    }
-    else
-    {
-        /* Update priority */
-        TaskCB->Priority = NewPriority;
-    }
+    OS_TaskChangePriority(TaskCB, NewPriority);
 
     if (NeedReSch)
     {

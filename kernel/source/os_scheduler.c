@@ -192,7 +192,54 @@ void OS_AddTaskToReadyList(OS_TCB_t * TaskCB)
     TRACE_AddToTargetList(TP_READY_LIST, TaskCB);
 }
 
-static void _OS_AddTaskToSortList(OS_TCB_t *TaskCB, OS_Uint8_t TargetList)
+void OS_AddTaskToEndlessBlockList(OS_TCB_t * TaskCB, ListHead_t *SleepHead, OS_Uint8_t SortType)
+{
+    ListHead_t *ListIterator  = OS_NULL;
+    OS_TCB_t   *TCB_Iterator  = OS_NULL;
+
+    switch (SortType)
+    {
+        case OS_BLOCK_SORT_FIFO:
+        {
+            // Insert directly, when wakeup pick element from tail of the list
+            ListAdd(&TaskCB->IpcSleepList, SleepHead);
+        }
+        break;
+
+        case OS_BLOCK_SORT_TASK_PRIO:
+        {
+            if (ListEmpty(SleepHead))
+            {
+                ListAdd(&TaskCB->IpcSleepList, SleepHead);
+            }
+            else
+            {
+                ListForEach(ListIterator, SleepHead)
+                {
+                    TCB_Iterator = ListEntry(ListIterator, OS_TCB_t, IpcSleepList);
+                    if (TaskCB->Priority > TCB_Iterator->Priority)
+                        break;
+                }
+
+                if (ListIterator == SleepHead)
+                {
+                    ListAddTail(&TaskCB->IpcSleepList, SleepHead);
+                }
+                else
+                {
+                    ListAdd(&TaskCB->IpcSleepList, TCB_Iterator->IpcSleepList.prev);
+                }
+            }
+        }
+        break;
+
+        default : break;
+    }
+
+    TaskCB->State = OS_TASK_ENDLESS_BLOCKED;
+}
+
+static void _OS_AddTaskToTimeSortList(OS_TCB_t *TaskCB, OS_Uint8_t TargetList)
 {
     ListHead_t *ListIterator = OS_NULL;
     OS_TCB_t   *TCB_Iterator = OS_NULL;
@@ -250,18 +297,18 @@ void OS_AddTaskToDelayList(OS_TCB_t *TaskCB)
 {
     OS_ASSERT(TaskCB->State != OS_TASK_DELAY);
 
-    _OS_AddTaskToSortList(TaskCB, OS_DELAY_LIST);
+    _OS_AddTaskToTimeSortList(TaskCB, OS_DELAY_LIST);
 
     TaskCB->State = OS_TASK_DELAY;
 
     TRACE_AddToTargetList(TP_DELAY_LIST, TaskCB);
 }
 
-void OS_AddTaskToBlockedTimeOutList(OS_TCB_t * TaskCB)
+void OS_AddTaskToTimeOutBlockList(OS_TCB_t * TaskCB)
 {
     OS_ASSERT(TaskCB->State != OS_TASK_TIMEOUT_BLOCKED);
 
-    _OS_AddTaskToSortList(TaskCB, OS_BLOCKED_TIMEOUT_LIST);
+    _OS_AddTaskToTimeSortList(TaskCB, OS_BLOCKED_TIMEOUT_LIST);
 
     TaskCB->State = OS_TASK_TIMEOUT_BLOCKED;
 
@@ -379,21 +426,18 @@ void OS_TaskSuspendToReady(OS_TCB_t * TaskCB)
     OS_AddTaskToReadyList(TaskCB);
 }
 
-void OS_TaskReadyToBlock(OS_TCB_t * TaskCB, ListHead_t *SleepHead, OS_Uint8_t BlockType)
+void OS_TaskReadyToBlock(OS_TCB_t * TaskCB, ListHead_t *SleepHead,
+                         OS_Uint8_t BlockType, OS_Uint8_t SortType)
 {
     /* Remove from ready list firstly, Note, only current tcb should as input */
     OS_RemoveTaskFromReadyList(TaskCB);
 
     /* Pend on the target sleep list head */
-    ListAdd(&TaskCB->IpcSleepList, SleepHead);
+    OS_AddTaskToEndlessBlockList(TaskCB, SleepHead, SortType);
 
-    if (BlockType == OS_BLOCK_TYPE_ENDLESS)
+    if (BlockType == OS_BLOCK_TYPE_TIMEOUT)
     {
-        TaskCB->State = OS_TASK_ENDLESS_BLOCKED;
-    }
-    else
-    {
-        OS_AddTaskToBlockedTimeOutList(TaskCB);
+        OS_AddTaskToTimeOutBlockList(TaskCB);
     }
 }
 
@@ -404,6 +448,23 @@ void OS_TaskBlockToReady(OS_TCB_t * TaskCB)
 
     /* Add it in ready list */
     OS_AddTaskToReadyList(TaskCB);
+}
+
+void OS_TaskChangePriority(OS_TCB_t * TaskCB, OS_Uint8_t NewPriority)
+{
+    if (TaskCB->State == OS_TASK_READY)
+    {
+        /* Remove firstly */
+        OS_RemoveTaskFromReadyList(TaskCB);
+        /* Update priority */
+        TaskCB->Priority = NewPriority;
+        /* Insert in ready list */
+        OS_AddTaskToReadyList(TaskCB);
+    }
+    else
+    {
+        TaskCB->Priority = NewPriority;
+    }
 }
 
 void OS_TaskCheckDelayWakeup(OS_Uint32_t time)
