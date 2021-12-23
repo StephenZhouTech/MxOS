@@ -206,10 +206,22 @@ OS_Uint32_t OS_MutexLock(OS_Uint32_t MutexHandle,
     /* Get wake up timestamp if using timeout strategy */
     TaskCB->WakeUpTime = OS_GetCurrentTime() + Timeout;
 
+    /* Before sleep, clear the wake up flag */
+    TaskCB->IpcTimeoutWakeup = OS_IPC_NO_TIMEOUT;
+
     /* Here means other task require this mutexlock, and will in sleep */
     OS_MutexSleep(TaskCB, Mutex, BlockType);
 
     OS_Schedule();
+
+    OS_MUTEX_UNLOCK();
+    OS_MUTEX_LOCK();
+
+    /* Wake up here */
+    if (TaskCB->IpcTimeoutWakeup == OS_IPC_WAIT_TIMEOUT)
+    {
+        Ret = OS_MUTEX_WAIT_TIMEOUT;
+    }
 
 OS_MutexLock_Exit:
     OS_MUTEX_UNLOCK();

@@ -519,9 +519,10 @@ void OS_TaskCheckBlockWakeup(OS_Uint32_t time)
         {
             TRACE_TaskBlockTimeout(TCB_Iterator);
 
-            OS_PRINTK_DEBUG("BlockTask[%s] Wakeup Timeout:[%d] ", TCB_Iterator->TaskName, time);
-
             ListIterator_prev = ListIterator->prev;
+
+            TCB_Iterator->IpcTimeoutWakeup = OS_IPC_WAIT_TIMEOUT;
+
             OS_TaskBlockToReady(TCB_Iterator);
             // Current ListIterator will link to ready list, relocate the pointer
             ListIterator = ListIterator_prev;

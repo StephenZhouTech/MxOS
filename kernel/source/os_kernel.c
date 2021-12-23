@@ -34,6 +34,7 @@ extern void OS_IdleTaskCreate(void);
 extern void OS_FirstTaskStartup(void);
 extern void OS_SemaphoreInit(void);
 extern void OS_MutexInit(void);
+extern void OS_QueueInit(void);
 
 void OS_API_KernelInit(void)
 {
@@ -56,6 +57,9 @@ void OS_API_KernelInit(void)
 
     /* Initial the Mutex */
     OS_MutexInit();
+
+    /* Initial the Queue */
+    OS_QueueInit();
 
     OS_PRINTK_INFO("Kernel Init Finished...");
 }

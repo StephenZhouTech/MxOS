@@ -155,5 +155,43 @@ typedef enum _OS_TracePointScheduler {
     #define TARCE_MutexWakeup(TaskCB, Mutex)
 #endif
 
+/**************************** Trace For Queue ****************************/
+#ifndef TARCE_QueueCreate
+    #define TARCE_QueueCreate(QueueHandle)
+#endif
+
+#ifndef TARCE_QueueWriterSleep
+    #define TARCE_QueueWriterSleep(TaskCB, Queue, BlockType)
+#endif
+
+#ifndef TARCE_QueueReaderSleep
+    #define TARCE_QueueReaderSleep(TaskCB, Queue, BlockType)
+#endif
+
+#ifndef TARCE_QueueWriterWakeup
+    #define TARCE_QueueWriterWakeup(TaskCB, Queue)
+#endif
+
+#ifndef TARCE_QueueReaderWakeup
+    #define TARCE_QueueReaderWakeup(TaskCB, Queue)
+#endif
+
+#ifndef TARCE_QueueReadWakeupWriter
+    #define TARCE_QueueReadWakeupWriter(TaskCB, Queue)
+#endif
+
+#ifndef TARCE_QueueWriteWakeupReader
+    #define TARCE_QueueWriteWakeupReader(TaskCB, Queue)
+#endif
+
+#ifndef TARCE_QueueReadOut
+    #define TARCE_QueueReadOut(TaskCB, Queue)
+#endif
+
+#ifndef TARCE_QueueWriteIn
+    #define TARCE_QueueWriteIn(TaskCB, Queue)
+#endif
+
+
 #endif // __MXOS_TRACE_H__
 

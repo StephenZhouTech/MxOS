@@ -108,6 +108,7 @@ OS_Uint32_t OS_API_TaskCreate(TaskInitParameter Param, OS_Uint32_t *TaskHandle)
     OS_AddTaskToReadyList(TaskCB);
 
     TaskCB->WakeUpTime = OS_TIME_MAX;
+    TaskCB->IpcTimeoutWakeup = OS_IPC_NO_TIMEOUT;
 
     ListHeadInit(&TaskCB->IpcSleepList);
 

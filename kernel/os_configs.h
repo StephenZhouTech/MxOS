@@ -42,9 +42,12 @@
 #define OS_PRINTK_LEVEL                             (OS_PRINTK_DEBUG_LEVEL)
 
 /* OS Sempaphore configures */
-#define OS_MAX_SEM_DEFINE                           10
+#define OS_MAX_SEM_DEFINE                           5
 
 /* OS Mutex configures */
-#define OS_MAX_MUTEX_DEFINE                         10
+#define OS_MAX_MUTEX_DEFINE                         5
+
+/* OS Queue configures */
+#define OS_MAX_QUEUE_DEFINE                         5
 
 #endif // !__MXOS_CONFIG_H__

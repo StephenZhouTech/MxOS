@@ -174,24 +174,34 @@ static OS_Uint32_t OS_SemWait(OS_Uint32_t SemHandle, OS_Uint8_t BlockType,
     if (Sem->Count > 0)
     {
         Sem->Count--;
+        goto OS_SemWait_Exit;
     }
-    else
+
+    if (Timeout == 0)
     {
-        if (Timeout == 0)
-        {
-            Ret = OS_SEM_TRY_WAIT_FAILED;
-            goto OS_SemWait_Exit;
-        }
-        else
-        {
-            TaskCB->WakeUpTime = OS_GetCurrentTime() + Timeout;
+        Ret = OS_SEM_TRY_WAIT_FAILED;
+        goto OS_SemWait_Exit;
+    }
 
-            TARCE_SemWaitSleep(TaskCB, Sem, BlockType);
+    /* Get wake up timestamp if using timeout strategy */
+    TaskCB->WakeUpTime = OS_GetCurrentTime() + Timeout;
 
-            OS_TaskReadyToBlock(TaskCB, &Sem->List, BlockType, OS_BLOCK_SORT_FIFO);
+    /* Before sleep, clear the wake up flag */
+    TaskCB->IpcTimeoutWakeup = OS_IPC_NO_TIMEOUT;
 
-            OS_Schedule();
-        }
+    TARCE_SemWaitSleep(TaskCB, Sem, BlockType);
+
+    OS_TaskReadyToBlock(TaskCB, &Sem->List, BlockType, OS_BLOCK_SORT_FIFO);
+
+    OS_Schedule();
+
+    OS_SEM_UNLOCK();
+    OS_SEM_LOCK();
+
+    /* Wake up here */
+    if (TaskCB->IpcTimeoutWakeup == OS_IPC_WAIT_TIMEOUT)
+    {
+        Ret = OS_SEM_WAIT_TIMEOUT;
     }
 
 OS_SemWait_Exit:
