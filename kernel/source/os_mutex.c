@@ -32,16 +32,18 @@
 #include "os_scheduler.h"
 #include "os_error_code.h"
 
+#if CONFIG_USE_MUTEX
+
 #define OS_MUTEX_MAX_COUNT                              1
 
 #define OS_MUTEX_LOCK()                                 OS_API_EnterCritical()
 #define OS_MUTEX_UNLOCK()                               OS_API_ExitCritical()
 
-OS_Mutex_t OS_MutexPool[OS_MAX_MUTEX_DEFINE];
+OS_Mutex_t OS_MutexPool[CONFIG_MAX_MUTEX_DEFINE];
 
 #define OS_MUTEX_CHECK_HANDLE_VALID(HANDLE)             \
 {                                                       \
-    if (HANDLE >= OS_MAX_MUTEX_DEFINE)                  \
+    if (HANDLE >= CONFIG_MAX_MUTEX_DEFINE)                  \
     {                                                   \
         return OS_MUTEX_HANDLE_INVALID;                 \
     }                                                   \
@@ -69,7 +71,7 @@ void OS_MutexInit(void)
 {
     OS_Uint32_t i = 0;
 
-    for (i = 0; i < OS_MAX_MUTEX_DEFINE; i++)
+    for (i = 0; i < CONFIG_MAX_MUTEX_DEFINE; i++)
     {
         OS_MutexPool[i].Used = OS_MUTEX_UNUSED;
         OS_MutexPool[i].Owner = OS_NULL;
@@ -83,13 +85,13 @@ OS_Uint32_t OS_GetMutexResource(OS_Uint32_t *MutexHandle)
 {
     OS_Uint32_t i = 0;
 
-    for (i = 0; i < OS_MAX_MUTEX_DEFINE; i++)
+    for (i = 0; i < CONFIG_MAX_MUTEX_DEFINE; i++)
     {
         if (OS_MutexPool[i].Used == OS_MUTEX_UNUSED)
             break;
     }
 
-    if (i == OS_MAX_MUTEX_DEFINE)
+    if (i == CONFIG_MAX_MUTEX_DEFINE)
     {
         return OS_NOT_ENOUGH_MUTEX_RESOURCE;
     }
@@ -385,3 +387,5 @@ OS_API_MutexDestory_Exit:
 
     return Ret;
 }
+
+#endif // CONFIG_USE_MUTEX

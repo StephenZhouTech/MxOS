@@ -32,9 +32,18 @@ extern void OS_SchedulerInit(void);
 extern void OS_CriticalInit(void);
 extern void OS_IdleTaskCreate(void);
 extern void OS_FirstTaskStartup(void);
+
+#if CONFIG_USE_SEM
 extern void OS_SemaphoreInit(void);
+#endif
+
+#if CONFIG_USE_MUTEX
 extern void OS_MutexInit(void);
+#endif
+
+#if CONFIG_USE_QUEUE
 extern void OS_QueueInit(void);
+#endif
 
 void OS_API_KernelInit(void)
 {
@@ -52,14 +61,20 @@ void OS_API_KernelInit(void)
     /* Initial the Timestamp value */
     OS_TimeInit();
 
+#if CONFIG_USE_SEM
     /* Ininial the semaphore */
     OS_SemaphoreInit();
+#endif
 
+#if CONFIG_USE_MUTEX
     /* Initial the Mutex */
     OS_MutexInit();
+#endif
 
+#if CONFIG_USE_QUEUE
     /* Initial the Queue */
     OS_QueueInit();
+#endif
 
     OS_PRINTK_INFO("Kernel Init Finished...");
 }

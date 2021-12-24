@@ -34,14 +34,16 @@
 #include "os_scheduler.h"
 #include "os_error_code.h"
 
+#if CONFIG_USE_QUEUE
+
 #define OS_QUEUE_LOCK()                                 OS_API_EnterCritical()
 #define OS_QUEUE_UNLOCK()                               OS_API_ExitCritical()
 
-OS_Queue_t OS_QueuePool[OS_MAX_QUEUE_DEFINE];
+OS_Queue_t OS_QueuePool[CONFIG_MAX_QUEUE_DEFINE];
 
 #define OS_QUEUE_CHECK_HANDLE_VALID(HANDLE)             \
 {                                                       \
-    if (HANDLE >= OS_MAX_QUEUE_DEFINE)                  \
+    if (HANDLE >= CONFIG_MAX_QUEUE_DEFINE)                  \
     {                                                   \
         return OS_QUEUE_HANDLE_INVALID;                 \
     }                                                   \
@@ -73,7 +75,7 @@ void OS_QueueInit(void)
 {
     OS_Uint32_t i = 0;
 
-    for (i = 0; i < OS_MAX_QUEUE_DEFINE; i++)
+    for (i = 0; i < CONFIG_MAX_QUEUE_DEFINE; i++)
     {
         OS_QueuePool[i].DataBuffer = OS_NULL;
         OS_QueuePool[i].ReadPos = 0;
@@ -91,13 +93,13 @@ OS_Uint32_t OS_GetQueueResource(OS_Uint32_t *QueueHandle)
 {
     OS_Uint32_t i = 0;
 
-    for (i = 0; i < OS_MAX_QUEUE_DEFINE; i++)
+    for (i = 0; i < CONFIG_MAX_QUEUE_DEFINE; i++)
     {
         if (OS_QueuePool[i].Used == OS_QUEUE_UNUSED)
             break;
     }
 
-    if (i == OS_MAX_QUEUE_DEFINE)
+    if (i == CONFIG_MAX_QUEUE_DEFINE)
     {
         return OS_NOT_ENOUGH_QUEUE_RESOURCE;
     }
@@ -526,3 +528,4 @@ OS_API_QueueDestory_Exit:
     return Ret;
 }
 
+#endif // CONFIG_USE_QUEUE

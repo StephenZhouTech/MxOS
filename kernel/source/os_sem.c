@@ -33,17 +33,19 @@
 #include "os_scheduler.h"
 #include "os_error_code.h"
 
+#if CONFIG_USE_SEM
+
 #define OS_SEM_MAX_COUNT                            0xFFFE
 #define OS_BINARY_SEM_MAX_COUNT                     1
 
 #define OS_SEM_LOCK()                               OS_API_EnterCritical()
 #define OS_SEM_UNLOCK()                             OS_API_ExitCritical()
 
-OS_Sem_t OS_SemPool[OS_MAX_SEM_DEFINE];
+OS_Sem_t OS_SemPool[CONFIG_MAX_SEM_DEFINE];
 
 #define OS_SEM_CHECK_HANDLE_VALID(HANDLE)           \
 {                                                   \
-    if (HANDLE >= OS_MAX_SEM_DEFINE)                \
+    if (HANDLE >= CONFIG_MAX_SEM_DEFINE)                \
     {                                               \
         return OS_SEM_HANDLE_INVALID;               \
     }                                               \
@@ -70,7 +72,7 @@ void OS_SemaphoreInit(void)
 {
     OS_Uint32_t i = 0;
 
-    for (i = 0; i < OS_MAX_SEM_DEFINE; i++)
+    for (i = 0; i < CONFIG_MAX_SEM_DEFINE; i++)
     {
         OS_SemPool[i].Count = 0;
         OS_SemPool[i].Used = OS_SEM_UNUSED;
@@ -82,13 +84,13 @@ OS_Uint32_t OS_GetSemResource(OS_Uint32_t *SemHandle)
 {
     OS_Uint32_t i = 0;
 
-    for (i = 0; i < OS_MAX_SEM_DEFINE; i++)
+    for (i = 0; i < CONFIG_MAX_SEM_DEFINE; i++)
     {
         if (OS_SemPool[i].Used == OS_SEM_UNUSED)
             break;
     }
 
-    if (i == OS_MAX_SEM_DEFINE)
+    if (i == CONFIG_MAX_SEM_DEFINE)
     {
         return OS_NOT_ENOUGH_SEM_RESOURCE;
     }
@@ -333,3 +335,5 @@ OS_Uint32_t OS_API_SemDestory(OS_Uint32_t SemHandle)
 
     return Ret;
 }
+
+#endif // CONFIG_USE_SEM
