@@ -53,4 +53,9 @@
 #define CONFIG_USE_QUEUE                            1
 #define CONFIG_MAX_QUEUE_DEFINE                     5
 
+/* OS Software timer configures */
+#define CONFIG_USE_SW_TIMER                         1
+#define CONFIG_MAX_TIMER_DEFINE                     5
+#define CONFIG_SW_TMR_TASK_STACK_SIZE               (1024 * OS_SIZE_BYTE)
+
 #endif // !__MXOS_CONFIG_H__

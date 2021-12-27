@@ -48,6 +48,10 @@ SCH_FUNCTION_SPACE OS_TaskScheduler_t Scheduler;
 extern OS_TCB_t * volatile CurrentTCB;
 extern OS_TCB_t * volatile SwitchNextTCB;
 
+#if CONFIG_USE_SW_TIMER
+extern void OS_SwTimerCheck(OS_Uint32_t CurrentTime);
+#endif
+
 void OS_Schedule(void);
 
 SCH_FUNCTION_SPACE void SetPriorityActive(OS_Uint8_t ActiveBit)
@@ -418,6 +422,15 @@ void OS_TaskUnknowToSuspend(OS_TCB_t * TaskCB)
     OS_AddTaskToSuspendList(TaskCB);
 }
 
+void OS_TaskReadyToSuspend(OS_TCB_t * TaskCB)
+{
+    /* Remove from ready list firstly */
+    OS_RemoveTaskFromReadyList(TaskCB);
+
+    /* Add it in suspend list */
+    OS_AddTaskToSuspendList(TaskCB);
+}
+
 void OS_TaskSuspendToReady(OS_TCB_t * TaskCB)
 {
     /* Remove from suspend list firstly */
@@ -663,6 +676,10 @@ void OS_SystemTickHander(void)
     TRACE_IncrementTick(CurrentTime);
 
     OS_TaskCheckWakeup(CurrentTime);
+
+#if CONFIG_USE_SW_TIMER
+    OS_SwTimerCheck(CurrentTime);
+#endif
 
     /* Schedule */
     OS_Schedule();

@@ -45,6 +45,11 @@ extern void OS_MutexInit(void);
 extern void OS_QueueInit(void);
 #endif
 
+#if CONFIG_USE_SW_TIMER
+extern void OS_SwTimerInit(void);
+extern void OS_SwTimerTaskCreate(void);
+#endif
+
 void OS_API_KernelInit(void)
 {
     OS_KernelStartPrint();
@@ -76,6 +81,10 @@ void OS_API_KernelInit(void)
     OS_QueueInit();
 #endif
 
+#if CONFIG_USE_SW_TIMER
+    OS_SwTimerInit();
+#endif
+
     OS_PRINTK_INFO("Kernel Init Finished...");
 }
 
@@ -86,6 +95,11 @@ void OS_API_KernelStart(void)
 
     /* Create Idle task */
     OS_IdleTaskCreate();
+
+#if CONFIG_USE_SW_TIMER
+    /* Create Software timer task */
+    OS_SwTimerTaskCreate();
+#endif
 
     /* Configure the IRQ just like NVIC priority */
     ARCH_InterruptInit();

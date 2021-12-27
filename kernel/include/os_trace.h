@@ -193,5 +193,22 @@ typedef enum _OS_TracePointScheduler {
 #endif
 
 
+/**************************** Trace For Sw Timer ****************************/
+#ifndef TRACE_SwTimerCreate
+    #define TRACE_SwTimerCreate(SwTimerHandle, WorkMode, Interval)
+#endif
+
+#ifndef TRACE_SwTimerStart
+    #define TRACE_SwTimerStart(SwTimer)
+#endif
+
+#ifndef TRACE_SwTimerStop
+    #define TRACE_SwTimerStop(SwTimer)
+#endif
+
+#ifndef TRACE_SwTimerDelete
+    #define TRACE_SwTimerDelete(SwTimer)
+#endif
+
 #endif // __MXOS_TRACE_H__
 

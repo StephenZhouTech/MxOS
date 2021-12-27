@@ -34,7 +34,7 @@
 #include "os_scheduler.h"
 #include "os_error_code.h"
 
-#define OS_IDEL_TASK_PRIO               0x00
+#define OS_IDLE_TASK_PRIO               0x00
 
 #define OS_TASK_LOCK()               OS_API_EnterCritical()
 #define OS_TASK_UNLOCK()             OS_API_ExitCritical()
@@ -431,7 +431,7 @@ void OS_IdleTaskCreate(void)
     Param.Name[2] = 'L';
     Param.Name[3] = 'E';
     Param.Name[4] = 0x00;
-    Param.Priority = OS_IDEL_TASK_PRIO;
+    Param.Priority = OS_IDLE_TASK_PRIO;
     Param.PrivateData = OS_NULL;
     Param.StackSize = CONFIG_IDLE_TASK_STACK_SIZE;
     Param.TaskEntry = OS_IdleTask;
