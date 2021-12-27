@@ -61,7 +61,7 @@ void LogInit(void)
 
     //USART_ClearFlag(USART1, USART_FLAG_TC);
 
-    USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);//开启相关中断
+    //USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);//开启相关中断
 
     NVIC_InitStructure.NVIC_IRQChannel = USART1_IRQn;
     NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority=3;

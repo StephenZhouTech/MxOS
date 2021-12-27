@@ -365,7 +365,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F40_41xxx,USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>..\..\cpu\cortex_m4;..\..\components\delay;..\..\components\sys;..\..\components\usart;..\..\libraries\stm32f407_fw_lib\include;.\include;..\..\components\log;..\..\bsp\include;..\..\components\lcd\st7735s;..\..\..\..\arch\arm\cortex_m4;..\..\..\..\kernel\include;..\..\..\..\kernel;..\..\..\..\platform</IncludePath>
+              <IncludePath>..\..\cpu\cortex_m4;..\..\components\delay;..\..\components\sys;..\..\components\usart;..\..\libraries\stm32f407_fw_lib\include;.\include;..\..\components\log;..\..\bsp\include;..\..\components\lcd\st7735s;..\..\..\..\arch\arm\cortex_m4;..\..\..\..\kernel\include;..\..\..\..\kernel;..\..\..\..\platform;..\..\..\..\external\letter_shell</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -894,6 +894,54 @@
               <FileName>tc_sw_timer_main.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\tc_sw_timer_main.c</FilePath>
+              <FileOption>
+                <CommonProperty>
+                  <UseCPPCompiler>2</UseCPPCompiler>
+                  <RVCTCodeConst>0</RVCTCodeConst>
+                  <RVCTZI>0</RVCTZI>
+                  <RVCTOtherData>0</RVCTOtherData>
+                  <ModuleSelection>0</ModuleSelection>
+                  <IncludeInBuild>0</IncludeInBuild>
+                  <AlwaysBuild>0</AlwaysBuild>
+                  <GenerateAssemblyFile>0</GenerateAssemblyFile>
+                  <AssembleAssemblyFile>0</AssembleAssemblyFile>
+                  <PublicsOnly>2</PublicsOnly>
+                  <StopOnExitCode>11</StopOnExitCode>
+                  <CustomArgument></CustomArgument>
+                  <IncludeLibraryModules></IncludeLibraryModules>
+                  <ComprImg>1</ComprImg>
+                </CommonProperty>
+                <FileArmAds>
+                  <Cads>
+                    <interw>2</interw>
+                    <Optim>0</Optim>
+                    <oTime>2</oTime>
+                    <SplitLS>2</SplitLS>
+                    <OneElfS>2</OneElfS>
+                    <Strict>2</Strict>
+                    <EnumInt>2</EnumInt>
+                    <PlainCh>2</PlainCh>
+                    <Ropi>2</Ropi>
+                    <Rwpi>2</Rwpi>
+                    <wLevel>2</wLevel>
+                    <uThumb>2</uThumb>
+                    <uSurpInc>2</uSurpInc>
+                    <uC99>2</uC99>
+                    <useXO>2</useXO>
+                    <VariousControls>
+                      <MiscControls></MiscControls>
+                      <Define></Define>
+                      <Undefine></Undefine>
+                      <IncludePath></IncludePath>
+                    </VariousControls>
+                  </Cads>
+                </FileArmAds>
+              </FileOption>
+            </File>
+            <File>
+              <FileName>tc_shell_main.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\tc_shell_main.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -907,6 +955,21 @@
               <FileName>platform.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\platform\platform.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Shell</GroupName>
+          <Files>
+            <File>
+              <FileName>shell.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\external\letter_shell\shell.c</FilePath>
+            </File>
+            <File>
+              <FileName>shell_ext.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\external\letter_shell\shell_ext.c</FilePath>
             </File>
           </Files>
         </Group>
