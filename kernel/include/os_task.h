@@ -43,6 +43,9 @@ typedef struct _OS_TaskControlBlock {
     OS_Uint8_t      Priority;
     ListHead_t      StateList;
     ListHead_t      IpcSleepList;
+#if CONFIG_USE_SHELL
+    ListHead_t      TasksList;
+#endif
     OS_Uint8_t      IpcTimeoutWakeup;
     OS_Uint8_t      State;
     OS_Int8_t       TaskName[CONFIG_TASK_NAME_LEN];

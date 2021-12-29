@@ -30,6 +30,10 @@
 #include "os_configs.h"
 #include "os_critical.h"
 
+#if CONFIG_USE_SHELL
+#include "os_shell.h"
+#endif
+
 #define OS_MEM_LOCK()                   OS_API_EnterCritical()
 #define OS_MEM_UNLOCK()                 OS_API_ExitCritical()
 
@@ -254,3 +258,36 @@ void OS_API_Free(void *pAddr)
 
     OS_MEM_UNLOCK();
 }
+
+#if CONFIG_USE_SHELL
+
+void ShellMem(void)
+{
+    ListHead_t     *ListIterator = OS_NULL;
+    MemBlockDesc_t *MmBlkDescIterator = OS_NULL;
+
+    printf("----------------------- Total Memory ----------------------\r\n");
+    printf("|--- Address ---|--- Size(Bytes) ---|\r\n");
+    printf("|   0x%08X      0x%08X     |\r\n", MemZone.StartAddr, MemZone.TotalSize);
+
+
+    printf("----------------------- Free Memory -----------------------\r\n");
+    printf("|--- Address ---|--- Size(Bytes) ---|\r\n");
+    ListForEach(ListIterator, &MemZone.FreeListHead)
+    {
+        MmBlkDescIterator = (MemBlockDesc_t *)ListIterator;
+        printf("|   0x%08X      0x%08X     |\r\n", (OS_Uint32_t)MmBlkDescIterator, MmBlkDescIterator->Size);
+    }
+
+    printf("----------------------- Used Memory -----------------------\r\n");
+    printf("|--- Address ---|--- Size(Bytes) ---|\r\n");
+    ListForEach(ListIterator, &MemZone.UsedListHead)
+    {
+        MmBlkDescIterator = (MemBlockDesc_t *)ListIterator;
+        printf("|   0x%08X      0x%08X     |\r\n", (OS_Uint32_t)MmBlkDescIterator, MmBlkDescIterator->Size);
+    }
+}
+SHELL_EXPORT_CMD(mem, ShellMem, Show memory info);
+
+#endif // CONFIG_USE_SHELL
+

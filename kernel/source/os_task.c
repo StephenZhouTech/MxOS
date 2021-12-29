@@ -53,6 +53,10 @@ extern void OS_TaskUnknowToSuspend(OS_TCB_t * TaskCB);
 extern void OS_TaskSuspendToReady(OS_TCB_t * TaskCB);
 extern void OS_TaskChangePriority(OS_TCB_t * TaskCB, OS_Uint8_t NewPriority);
 
+#if CONFIG_USE_SHELL
+extern void OS_SchTaskRegister(OS_TCB_t *TaskCB);
+#endif
+
 OS_Uint32_t OS_API_TaskCreate(TaskInitParameter Param, OS_Uint32_t *TaskHandle)
 {
     OS_Uint32_t Ret = OS_SUCCESS;
@@ -111,6 +115,11 @@ OS_Uint32_t OS_API_TaskCreate(TaskInitParameter Param, OS_Uint32_t *TaskHandle)
     TaskCB->IpcTimeoutWakeup = OS_IPC_NO_TIMEOUT;
 
     ListHeadInit(&TaskCB->IpcSleepList);
+
+#if CONFIG_USE_SHELL
+    ListHeadInit(&TaskCB->TasksList);
+    OS_SchTaskRegister(TaskCB);
+#endif
 
     *TaskHandle = (OS_Uint32_t)TaskCB;
 

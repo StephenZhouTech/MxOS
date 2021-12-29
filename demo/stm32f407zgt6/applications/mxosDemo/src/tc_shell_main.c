@@ -14,10 +14,6 @@
 #include "os_error_code.h"
 #include "os_sw_timer.h"
 
-#include "shell.h"
-
-SHELL_TypeDef OS_Shell;
-
 void _delay(uint32_t cnt)
 {
     while(cnt-- != 0);
@@ -26,21 +22,14 @@ void _delay(uint32_t cnt)
 OS_Uint32_t task1_handle = 0;
 OS_Uint32_t task2_handle = 0;
 OS_Uint32_t task3_handle = 0;
-OS_Uint32_t task_shell_handle = 0;
 
 OS_Uint32_t t1_cnt = 0;
 OS_Uint32_t t2_cnt = 0;
 OS_Uint32_t t3_cnt = 0;
 
-OS_Uint32_t SwTimerHandle1 = 0;
-OS_Uint32_t SwTimerHandle2 = 0;
-
 #define TASK_1_DELAY        1000
 #define TASK_2_DELAY        2000
 #define TASK_3_DELAY        3000
-
-#define SW_TIMER_INTERVAL_1 1500
-#define SW_TIMER_INTERVAL_2 4000
 
 void TASK1_FUNC(void *param)
 {
@@ -64,147 +53,18 @@ void TASK2_FUNC(void *param)
 
 void TASK3_FUNC(void *param)
 {
-    OS_Uint32_t Ret = OS_SUCCESS;
-
     while(1)
     {
         t3_cnt++;
-
-        if (t3_cnt == 5)
-        {
-            printf("T3 Start Timer\r\n");
-            Ret = OS_API_SwTimerStart(SwTimerHandle1);
-            if (Ret == OS_SUCCESS)
-            {
-                printf("[OK] : T3 Start Timer 1 Interval = [%d]\r\n", SW_TIMER_INTERVAL_1);
-            }
-            else
-            {
-                printf("[ERROR] : T3 Start Timer 1 Failed\r\n");
-            }
-
-            Ret = OS_API_SwTimerStart(SwTimerHandle2);
-            if (Ret == OS_SUCCESS)
-            {
-                printf("[OK] : T3 Start Timer 2 Interval = [%d]\r\n", SW_TIMER_INTERVAL_2);
-            }
-            else
-            {
-                printf("[ERROR] : T3 Start Timer 2 Failed\r\n");
-            }
-        }
-
-        if (t3_cnt == 10)
-        {
-            Ret = OS_API_SwTimerStop(SwTimerHandle1);
-            if (Ret == OS_SUCCESS)
-            {
-                printf("[OK] : T3 Stop Timer 1 OK !\r\n");
-            }
-            else
-            {
-                printf("[ERROR] : T3 Stop Timer 1 Failed\r\n");
-            }
-
-            Ret = OS_API_SwTimerStop(SwTimerHandle2);
-            if (Ret == OS_SW_TIMER_NOT_RUNNING)
-            {
-                printf("[OK] : T3 Stop Timer 2 already stopped !\r\n");
-            }
-            else
-            {
-                printf("[ERROR] : T3 Stop Timer 2 Failed\r\n");
-            }
-        }
-
-        if (t3_cnt == 15)
-        {
-            Ret = OS_API_SwTimerStart(SwTimerHandle1);
-            if (Ret == OS_SUCCESS)
-            {
-                printf("[OK] : T3 Restart Timer 1 OK !\r\n");
-            }
-            else
-            {
-                printf("[ERROR] : T3 Restart Timer 1 Failed\r\n");
-            }
-
-            Ret = OS_API_SwTimerDelete(SwTimerHandle2);
-            if (Ret == OS_SUCCESS)
-            {
-                printf("[OK] : T3 Delete Timer 2 OK !\r\n");
-            }
-            else
-            {
-                printf("[ERROR] : T3 Delete Timer 2 Failed\r\n");
-            }
-        }
-
-        if (t3_cnt == 20)
-        {
-            Ret = OS_API_SwTimerDelete(SwTimerHandle1);
-            if (Ret == OS_SUCCESS)
-            {
-                printf("[OK] : T3 Delete Timer 1 OK !\r\n");
-            }
-            else
-            {
-                printf("[ERROR] : T3 Delete Timer 1 Failed\r\n");
-            }
-        }
 
         OS_API_TaskDelay(TASK_3_DELAY);
 
     }
 }
 
-void AutoReloadTimerHandler(void *Param)
-{
-    printf("[Auto Reload] : [%d]\r\n", OS_GetCurrentTime());
-}
-
-void OneShotTimerHandler(void *Param)
-{
-    printf("[One Shot] : [%d]\r\n", OS_GetCurrentTime());
-}
-
-signed char AppShellRead(char *ch)
-{
-    while (USART_GetFlagStatus(USART1, USART_FLAG_RXNE))
-    {
-        *ch = USART_ReceiveData(USART1);
-        return 0;
-    }
-    return -1;
-}
-
-void AppShellWrite(const char ch)
-{
-    while((USART1->SR&0x40)==0);
-    USART1->DR = (u8) ch;
-}
-
-void TASK_Shell(void *param)
-{
-    while(1)
-    {
-        t2_cnt++;
-
-        OS_API_SchedulerSuspend();
-        printf("T2[%04d] CurTime = %d\r\n",t2_cnt, OS_GetCurrentTime());
-        OS_API_SchedulerResume();
-
-        OS_API_TaskDelay(TASK_2_DELAY);
-    }
-}
-
 int main(void)
 {
     PlatformInit();
-
-    OS_Shell.read = AppShellRead;
-    OS_Shell.write = AppShellWrite;
-    shellInit(&OS_Shell);
 
     OS_API_KernelInit();
 
@@ -230,29 +90,6 @@ int main(void)
     Param.Priority = 3;
     Param.TaskEntry = TASK3_FUNC;
     OS_API_TaskCreate(Param, (void *)&task3_handle);
-
-    Param.Name[0] ='S';
-    Param.Name[1] ='h';
-    Param.Name[2] ='e';
-    Param.Name[3] ='l';
-    Param.Name[4] ='l';
-    Param.Priority = 1;
-    Param.StackSize = 4096;
-    Param.PrivateData = (void *)&OS_Shell;
-    Param.TaskEntry = shellTask;
-    OS_API_TaskCreate(Param, (void *)&task_shell_handle);
-
-    OS_API_SwTimerCreate(&SwTimerHandle1,
-                        OS_SW_TIMER_AUTO_RELOAD,
-                        1500,
-                        AutoReloadTimerHandler,
-                        OS_NULL);
-
-    OS_API_SwTimerCreate(&SwTimerHandle2,
-                        OS_SW_TIMER_ONESHOT,
-                        4000,
-                        OneShotTimerHandler,
-                        OS_NULL);
 
     OS_API_KernelStart();
 

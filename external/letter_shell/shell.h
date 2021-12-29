@@ -337,7 +337,7 @@ typedef struct
 } SHELL_KeyFunctionDef;
 
 
-void shellInit(SHELL_TypeDef *shell);
+void shellInit(void *shellParam);
 void shellSetCommandList(SHELL_TypeDef *shell, SHELL_CommandTypeDef *base, unsigned short size);
 
 #if SHELL_USING_VAR == 1

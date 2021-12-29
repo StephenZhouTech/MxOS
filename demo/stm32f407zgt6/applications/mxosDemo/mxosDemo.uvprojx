@@ -693,6 +693,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\kernel\source\os_sw_timer.c</FilePath>
             </File>
+            <File>
+              <FileName>os_shell.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\kernel\source\os_shell.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -944,9 +949,6 @@
               <FilePath>.\src\tc_shell_main.c</FilePath>
             </File>
           </Files>
-        </Group>
-        <Group>
-          <GroupName>MxOS_DBG</GroupName>
         </Group>
         <Group>
           <GroupName>Platform</GroupName>

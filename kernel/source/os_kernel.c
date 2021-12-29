@@ -50,6 +50,11 @@ extern void OS_SwTimerInit(void);
 extern void OS_SwTimerTaskCreate(void);
 #endif
 
+#if CONFIG_USE_SHELL
+extern void OS_ShellInit(void);
+extern void OS_ShellTaskCreate(void);
+#endif
+
 void OS_API_KernelInit(void)
 {
     OS_KernelStartPrint();
@@ -85,6 +90,10 @@ void OS_API_KernelInit(void)
     OS_SwTimerInit();
 #endif
 
+#if CONFIG_USE_SHELL
+    OS_ShellInit();
+#endif
+
     OS_PRINTK_INFO("Kernel Init Finished...");
 }
 
@@ -99,6 +108,10 @@ void OS_API_KernelStart(void)
 #if CONFIG_USE_SW_TIMER
     /* Create Software timer task */
     OS_SwTimerTaskCreate();
+#endif
+
+#if CONFIG_USE_SHELL
+    OS_ShellTaskCreate();
 #endif
 
     /* Configure the IRQ just like NVIC priority */

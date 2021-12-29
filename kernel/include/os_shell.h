@@ -22,43 +22,21 @@
  * 1 tab == 4 spaces!
  */
 
-/* 
- * Initial the platform
- * Just like Console, Clock(PLL), PMU, Wake up source
- */
-#include "platform.h"
-#include "Log.h"
-#include "led.h"
-#include "os_configs.h"
-#include "stm32f4xx_usart.h"
-#include "stm32f4xx.h"
+#ifndef __MXOS_SHELL_H__
+#define __MXOS_SHELL_H__
 
-void PlatforUartInit(void)
-{
-    LogInit();
-}
+#include "os_types.h"
+#include "os_list.h"
+#include "os_task.h"
 
-void PlatformInit(void)
-{
-    PlatforUartInit();
+#include "shell.h"
 
-    BspLedInit();
-}
+typedef void (*ShellInit_t)(void *Param);
 
-#if CONFIG_USE_SHELL
-void PlatformUartSendDataPolling(const char ch)
-{
-    while((USART1->SR&0x40)==0);
-    USART1->DR = (u8) ch;
-}
+typedef struct _OS_Shell {
+    TaskFunction_t      TaskEntry;
+    ShellInit_t         ShellInit;
+    void                *Param;
+} OS_Shell_t;
 
-signed char PlatformUartRecvDataPolling(char *ch)
-{
-    if (USART_GetFlagStatus(USART1, USART_FLAG_RXNE))
-    {
-        *ch = USART_ReceiveData(USART1);
-        return 0;
-    }
-    return -1;
-}
-#endif // CONFIG_USE_SHELL
+#endif // __MXOS_SHELL_H__

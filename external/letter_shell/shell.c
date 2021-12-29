@@ -121,8 +121,9 @@ const SHELL_KeyFunctionDef shellDefaultKeyFunctionList[] =
  * 
  * @param shell shell对象
  */
-void shellInit(SHELL_TypeDef *shell)
+void shellInit(void *shellParam)
 {
+    SHELL_TypeDef *shell = (SHELL_TypeDef *)shellParam;
     shell->length = 0;
     shell->cursor = 0;
     shell->historyCount = 0;
@@ -138,8 +139,8 @@ void shellInit(SHELL_TypeDef *shell)
     shell->status.authFlag = 0;
     shellDisplay(shell, shellText[TEXT_PWD_HINT]);
 #else
-    shellDisplay(shell, shellText[TEXT_INFO]);
-    shellDisplay(shell, shell->command);
+//    shellDisplay(shell, shellText[TEXT_INFO]);
+//    shellDisplay(shell, shell->command);
 #endif     
     
 #if SHELL_USING_CMD_EXPORT == 1

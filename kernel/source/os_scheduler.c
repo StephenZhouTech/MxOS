@@ -34,6 +34,10 @@
 #include "os_scheduler.h"
 #include "os_error_code.h"
 
+#if CONFIG_USE_SHELL
+#include "os_shell.h"
+#endif
+
 #define OS_SCHEDULER_LOCK()               OS_API_EnterCritical()
 #define OS_SCHEDULER_UNLOCK()             OS_API_ExitCritical()
 
@@ -653,6 +657,10 @@ void OS_SchedulerInit(void)
     ListHeadInit(&Scheduler.SuspendListHead);
     ListHeadInit(&Scheduler.DelayListHead);
 
+#if CONFIG_USE_SHELL
+    ListHeadInit(&Scheduler.AllTasksListHead);
+#endif
+
     Scheduler.SchedulerSuspendNesting = 0;
     Scheduler.PriorityActive = 0;
     Scheduler.ReSchedulePending = NO_RESCH_PENDING;
@@ -687,3 +695,48 @@ void OS_SystemTickHander(void)
 SystemTickHanderExit:
     OS_SCHEDULER_UNLOCK();
 }
+
+#if CONFIG_USE_SHELL
+void OS_SchTaskRegister(OS_TCB_t *TaskCB)
+{
+    ListAdd(&TaskCB->TasksList, &Scheduler.AllTasksListHead);
+}
+
+char *ShellTaskStateString[] =
+{
+    "READY",
+    "DELAY",
+    "SUSPEND",
+    "ENDLESS",
+    "TIMEOUT",
+    "UNKNOWN"
+};
+
+void ShellTask(void)
+{
+    ListHead_t *StateListHead = OS_NULL;
+    ListHead_t *ListIterator  = OS_NULL;
+    OS_TCB_t   *TCB_Iterator  = OS_NULL;
+
+    StateListHead = &Scheduler.AllTasksListHead;
+
+    printf("-------------------------- Task Info -------------------------\r\n");
+    printf("|--- Name ---|--- Status ---|--- Priority ---|--- Wakeup ---|\r\n");
+
+    if (!ListEmpty(StateListHead))
+    {
+        ListForEach(ListIterator, StateListHead)
+        {
+            TCB_Iterator = ListEntry(ListIterator, OS_TCB_t, TasksList);
+            printf("|  %8s   ", TCB_Iterator->TaskName);
+            printf("   %8s    ", ShellTaskStateString[TCB_Iterator->State]);
+            printf("     0x%02X        ", TCB_Iterator->Priority);
+            printf("  0x%08X  |", TCB_Iterator->WakeUpTime);
+            printf("\r\n");
+        }
+    }
+}
+
+SHELL_EXPORT_CMD(task, ShellTask, Show task info);
+#endif
+

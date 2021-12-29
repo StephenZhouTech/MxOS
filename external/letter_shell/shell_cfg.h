@@ -42,7 +42,7 @@
  * @brief 是否显示命令调用函数返回值
  *        使能此宏，则每次调用shell命令之后会以整形和十六进制的方式打印函数的返回值
  */
-#define     SHELL_DISPLAY_RETURN        1
+#define     SHELL_DISPLAY_RETURN        0
 
 /**
  * @brief 是否使用shell参数自动解析

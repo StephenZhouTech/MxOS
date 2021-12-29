@@ -58,4 +58,9 @@
 #define CONFIG_MAX_TIMER_DEFINE                     5
 #define CONFIG_SW_TMR_TASK_STACK_SIZE               (1024 * OS_SIZE_BYTE)
 
+/* OS Shell */
+#define CONFIG_USE_SHELL                            1
+#define CONFIG_SHELL_TASK_PRIO                      1
+#define CONFIG_SHELL_TASK_STACK_SIZE                (1024 * OS_SIZE_BYTE)
+
 #endif // !__MXOS_CONFIG_H__

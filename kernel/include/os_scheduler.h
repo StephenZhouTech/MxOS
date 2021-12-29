@@ -26,12 +26,16 @@
 #define __MXOS_SCHEDULER_H__
 
 #include "os_task.h"
+#include "os_configs.h"
 
 typedef struct _OS_TaskScheduler {
     ListHead_t      ReadyListHead[OS_MAX_TASK_PRIORITY];
     ListHead_t      BlockTimeoutListHead;
     ListHead_t      SuspendListHead;
     ListHead_t      DelayListHead;
+#if CONFIG_USE_SHELL
+    ListHead_t      AllTasksListHead;
+#endif
     OS_Uint32_t     PriorityActive;
     OS_Int16_t      SchedulerSuspendNesting;
     OS_Uint8_t      ReSchedulePending;
