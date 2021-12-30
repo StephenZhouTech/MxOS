@@ -1,6 +1,8 @@
 # MxOS #
 A Lite Real Time Operation System for 32bit MCU(CPU)
 
+![](https://gitee.com/stephenzhou-tech/mx-os/raw/master/documents/MxOS_V1_0_Architecture.png)
+
 ## Introductions ##
 ### 1. Memory Manager ###
 - 1.1 Support allocating and free memory API.
